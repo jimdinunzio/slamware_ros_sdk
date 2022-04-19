@@ -46,8 +46,8 @@ namespace slamware_ros_sdk {
             doPerform(pltfm);
         }
     }
-    
-    ros::NodeHandle& ServerWorkerBase::rosNodeHandle() const
+
+    rclcpp::Node::SharedPtr ServerWorkerBase::rosNodeHandle() const
     {
         return rosSdkServer_->rosNodeHandle_();
     }
@@ -57,7 +57,7 @@ namespace slamware_ros_sdk {
         return rosSdkServer_->serverParams_();
     }
 
-    tf::TransformBroadcaster& ServerWorkerBase::tfBroadcaster() const
+    std::shared_ptr<tf2_ros::TransformBroadcaster> ServerWorkerBase::tfBroadcaster() const
     {
         return rosSdkServer_->tfBroadcaster_();
     }

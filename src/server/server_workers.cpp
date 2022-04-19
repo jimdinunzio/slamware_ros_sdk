@@ -1,6 +1,11 @@
 
 #include "server_workers.h"
 #include "slamware_ros_sdk_server.h"
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Transform.h>
+
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <boost/assert.hpp>
 
@@ -14,8 +19,9 @@ namespace slamware_ros_sdk {
         )
         : super_t(pRosSdkServer, wkName, triggerInterval)
     {
-        auto& nhRos = rosNodeHandle();
-        pubRobotDeviceInfo_ = nhRos.advertise<RobotDeviceInfo>("robot_device_info", 1, true);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubRobotDeviceInfo_ = nhRos->create_publisher<RobotDeviceInfo>("robot_device_info", 1);
+//        pubRobotDeviceInfo_ = nhRos->create_publisher<RobotDeviceInfo>("robot_device_info", 1, true);
     }
 
     ServerRobotDeviceInfoWorker::~ServerRobotDeviceInfoWorker()
@@ -44,8 +50,8 @@ namespace slamware_ros_sdk {
         msgRobotDeviceInfo.sdp_version = pltfm.getSDPVersion();
         msgRobotDeviceInfo.sdk_version = pltfm.getSDKVersion();
 
-        pubRobotDeviceInfo_.publish(msgRobotDeviceInfo);
-        ROS_INFO("device_id: %s, hardware_version: %s, software_version: %s, sdp_version: %s, sdk_version: %s."
+        pubRobotDeviceInfo_->publish(msgRobotDeviceInfo);
+        RCLCPP_INFO(rosNodeHandle()->get_logger(),"device_id: %s, hardware_version: %s, software_version: %s, sdp_version: %s, sdk_version: %s."
             , msgRobotDeviceInfo.device_id.c_str()
             , msgRobotDeviceInfo.hardware_version.c_str()
             , msgRobotDeviceInfo.software_version.c_str()
@@ -70,8 +76,8 @@ namespace slamware_ros_sdk {
         : ServerWorkerBase(pRosSdkServer, wkName, triggerInterval)
     {
         const auto& srvParams = serverParams();
-        auto& nhRos = rosNodeHandle();
-        pubRobotPose_ = nhRos.advertise<nav_msgs::Odometry>(srvParams.odom_topic, 10);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubRobotPose_ = nhRos->create_publisher<nav_msgs::msg::Odometry>(srvParams.odom_topic, 10);
     }
 
     ServerRobotPoseWorker::~ServerRobotPoseWorker()
@@ -79,20 +85,65 @@ namespace slamware_ros_sdk {
         //
     }
 
+//    geometry_msgs::msg::TransformStamped constuct_transform(rpos::core::Pose p)
+//    {
+//        geometry_msgs::msg::TransformStamped transformStamped;
+//        transformStamped.header.stamp = rclcpp::Time();
+//        transformStamped.header.frame_id = map_frame;
+//        transformStamped.child_frame_id = odom_frame;
+//        transformStamped.transform.translation.x = p.x();
+//        transformStamped.transform.translation.y = p.y();
+//        transformStamped.transform.translation.z = p.z();
+//        transformStamped.transform.rotation.x = 0;
+//        transformStamped.transform.rotation.y = 0;
+//        transformStamped.transform.rotation.z = 0;
+//        transformStamped.transform.rotation.w = 1;
+//        return transformStamped;
+//    }
+
     void ServerRobotPoseWorker::doPerform(slamware_platform_t& pltfm)
     {
         const auto& srvParams = serverParams();
-        auto& tfBrdcst = tfBroadcaster();
+        auto tfBrdcst = tfBroadcaster();
         auto wkDat = mutableWorkData();
 
         // send TF transform
         if (srvParams.fixed_odom_map_tf) // only for debug rosrun
         {
-            tf::Transform tfIdenty;
-            tfIdenty.setOrigin(tf::Vector3 (0.0, 0.0, 0.0));
-            tfIdenty.setRotation(tf::Quaternion(0, 0, 0, 1));
 
-            tfBrdcst.sendTransform(tf::StampedTransform(tfIdenty, ros::Time::now(), srvParams.map_frame, srvParams.odom_frame));
+//            std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+//            tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+////
+//            geometry_msgs::msg::TransformStamped transformStamped;
+//            transformStamped.header.stamp = rclcpp::Time();
+//            transformStamped.header.frame_id = "odom";
+//            transformStamped.child_frame_id = "base_link";
+//            transformStamped.transform.translation.z = 0.0;
+//            transformStamped.transform.rotation.x = 0.0;
+//            transformStamped.transform.rotation.y = 0.0;
+//            tf_broadcaster_->sendTransform(transformStamped);
+
+
+
+            tf2::Transform tfIdenty;
+            //fouad
+//            tfIdenty.setIdentity();
+            tfIdenty.setOrigin(tf2::Vector3 (0.0, 0.0, 0.0));
+            tfIdenty.setRotation(tf2::Quaternion(0, 0, 0, 1));
+
+            geometry_msgs::msg::TransformStamped transformStamped;
+            transformStamped.header.stamp = rclcpp::Time();
+            transformStamped.header.frame_id = srvParams.map_frame;
+            transformStamped.child_frame_id = srvParams.odom_frame;
+            transformStamped.transform.translation.x = 0.0;
+            transformStamped.transform.translation.y = 0.0;
+            transformStamped.transform.translation.z = 0.0;
+            transformStamped.transform.rotation.x = 0;
+            transformStamped.transform.rotation.y = 0;
+            transformStamped.transform.rotation.z = 0;
+            transformStamped.transform.rotation.w = 1;
+
+            tfBrdcst->sendTransform(transformStamped);
             //tfBrdcst.sendTransform(tf::StampedTransform(tfIdenty, ros::Time::now(), srvParams.robot_frame, srvParams.laser_frame));
         }
 
@@ -106,18 +157,37 @@ namespace slamware_ros_sdk {
         wkDat->robotPose = robotPose;
 
         // publish odom transform
-        tf::Transform transform;
-        transform.setOrigin(tf::Vector3(robotPose.x(), robotPose.y(), 0.0));
-        tf::Quaternion q = tf::createQuaternionFromYaw(robotPose.yaw());
-        transform.setRotation(q);
-        tfBrdcst.sendTransform(tf::StampedTransform(transform, ros::Time::now(), srvParams.odom_frame, srvParams.robot_frame));
+        geometry_msgs::msg::TransformStamped transformStamped;
+        transformStamped.header.stamp = rclcpp::Time();
+        transformStamped.header.frame_id = srvParams.odom_frame;
+        transformStamped.child_frame_id = srvParams.robot_frame;
+        transformStamped.transform.translation.x = robotPose.x();
+        transformStamped.transform.translation.y = robotPose.y();
+        transformStamped.transform.translation.z = robotPose.z();
+
+        tf2::Matrix3x3 obs_mat;
+        obs_mat.setEulerYPR(robotPose.yaw(),0.0,0.0);
+
+        tf2::Quaternion q_tf;
+        obs_mat.getRotation(q_tf);
+        transformStamped.transform.rotation.x = q_tf.getX();
+        transformStamped.transform.rotation.y = q_tf.getY();
+        transformStamped.transform.rotation.z = q_tf.getZ();
+        transformStamped.transform.rotation.w = q_tf.getW();
+        tfBrdcst->sendTransform(transformStamped);
+
+//        tf2::Transform transform;
+//        transform.setOrigin(tf2::Vector3(robotPose.x(), robotPose.y(), 0.0));
+//        tf2::Quaternion q = tf2::createQuaternionFromYaw(robotPose.yaw());
+//        transform.setRotation(q);
+//        tfBrdcst->sendTransform(tf::StampedTransform(transform, rclcpp::Time, srvParams.odom_frame, srvParams.robot_frame));
 
         // send TF transform
-        nav_msgs::Odometry msgRobotPose;
+        nav_msgs::msg::Odometry msgRobotPose;
         msgRobotPose.header.frame_id = srvParams.odom_frame;
-        msgRobotPose.header.stamp = ros::Time::now();
+        msgRobotPose.header.stamp = rclcpp::Time();
         sltcToRosMsg(robotPose, msgRobotPose.pose.pose);
-        pubRobotPose_.publish(msgRobotPose);
+        pubRobotPose_->publish(msgRobotPose);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -159,15 +229,15 @@ namespace slamware_ros_sdk {
 
         if (wkDat->syncMapRequested.load())
         {
-            ROS_INFO("try to sync whold explore map.");
+            RCLCPP_INFO(rosNodeHandle()->get_logger() ,"try to sync whold explore map.");
             if (syncWholeMap_(srvParams, pltfm, wkDat))
             {
                 wkDat->syncMapRequested.store(false);
-                ROS_INFO("whold explore map synchronized.");
+                RCLCPP_INFO(rosNodeHandle()->get_logger() ,"whold explore map synchronized.");
             }
             else
             {
-                ROS_WARN("failed to sync whole explore map.");
+                RCLCPP_INFO(rosNodeHandle()->get_logger() ,"failed to sync whole explore map.");
             }
             return;
         }
@@ -198,7 +268,7 @@ namespace slamware_ros_sdk {
         if (!shouldReinitMap_)
             return true;
 
-        ROS_INFO("try to reinit explore map.");
+        RCLCPP_INFO(rosNodeHandle()->get_logger() ,"try to reinit explore map.");
         wkDat->syncMapRequested.store(true);
 
         const float fHalfWH = 0.5f;
@@ -207,13 +277,13 @@ namespace slamware_ros_sdk {
         auto hMap = getMapByPltfm_(pltfm, tArea);
         if (!hMap)
         {
-            ROS_WARN("failed get map when init explore map.");
+            RCLCPP_INFO(rosNodeHandle()->get_logger() ,"failed get map when init explore map.");
             return false;
         }
         const auto& mapResolution = hMap.getMapResolution();
         wkDat->exploreMapHolder.reinit(mapResolution.x());
 
-        ROS_INFO("explore map initialized, resolution: %f, moreCellCntToExtend: %d."
+        RCLCPP_INFO(rosNodeHandle()->get_logger() ,"explore map initialized, resolution: %f, moreCellCntToExtend: %d."
             , mapResolution.x()
             , wkDat->exploreMapHolder.getMoreCellCountToExtend()
             );
@@ -227,7 +297,7 @@ namespace slamware_ros_sdk {
         if (rpos::system::types::fequal(fResolution, recvResolution))
             return true;
 
-        ROS_ERROR("local resolution: %f, received resolution: %f, request reinit.", fResolution, recvResolution);
+        RCLCPP_ERROR(rosNodeHandle()->get_logger() ,"local resolution: %f, received resolution: %f, request reinit.", fResolution, recvResolution);
         requestReinitMap_();
         return false;
     }
@@ -262,14 +332,14 @@ namespace slamware_ros_sdk {
 
         const auto knownArea = pltfm.getKnownArea(rpos::features::location_provider::MapTypeBitmap8Bit, rpos::features::location_provider::EXPLORERMAP);
         const auto knownCellIdxRect = wkDat->exploreMapHolder.calcRoundedCellIdxRect(knownArea);
-        ROS_INFO("known area: ((%f, %f), (%f, %f)), cell rect: ((%d, %d), (%d, %d)), iOnceMaxCellCntWH: %d."
+        RCLCPP_INFO(rosNodeHandle()->get_logger() ,"known area: ((%f, %f), (%f, %f)), cell rect: ((%d, %d), (%d, %d)), iOnceMaxCellCntWH: %d."
             , knownArea.x(), knownArea.y(), knownArea.width(), knownArea.height()
             , knownCellIdxRect.x(), knownCellIdxRect.y(), knownCellIdxRect.width(), knownCellIdxRect.height()
             , iOnceMaxCellCntWH
             );
         if (ServerMapHolder::sfIsCellIdxRectEmpty(knownCellIdxRect))
         {
-            ROS_ERROR("sync map, knownCellIdxRect is empty.");
+            RCLCPP_ERROR(rosNodeHandle()->get_logger() ,"sync map, knownCellIdxRect is empty.");
             return false;
         }
 
@@ -328,7 +398,7 @@ namespace slamware_ros_sdk {
     #endif
         if (ServerMapHolder::sfIsCellIdxRectEmpty(knownCellIdxRect))
         {
-            ROS_ERROR("update map, knownCellIdxRect is empty, request sync map.");
+            RCLCPP_ERROR(rosNodeHandle()->get_logger(),"update map, knownCellIdxRect is empty, request sync map.");
             rosSdkServer()->requestSyncMap();
             return false;
         }
@@ -336,7 +406,7 @@ namespace slamware_ros_sdk {
         const auto reqIdxRect = ServerMapHolder::sfIntersectionOfCellIdxRect(nearRobotIdxRect, knownCellIdxRect);
         if (ServerMapHolder::sfIsCellIdxRectEmpty(reqIdxRect))
         {
-            ROS_WARN("knownCellIdxRect: ((%d, %d), (%d, %d)), nearRobotIdxRect: ((%d, %d), (%d, %d)), intersection is empty."
+            RCLCPP_WARN(rosNodeHandle()->get_logger(),"knownCellIdxRect: ((%d, %d), (%d, %d)), nearRobotIdxRect: ((%d, %d), (%d, %d)), intersection is empty."
                 , knownCellIdxRect.x(), knownCellIdxRect.y(), knownCellIdxRect.width(), knownCellIdxRect.height()
                 , nearRobotIdxRect.x(), nearRobotIdxRect.y(), nearRobotIdxRect.width(), nearRobotIdxRect.height()
                 );
@@ -354,9 +424,9 @@ namespace slamware_ros_sdk {
         : ServerWorkerBase(pRosSdkServer, wkName, triggerInterval)
     {
         const auto& srvParams = serverParams();
-        auto& nhRos = rosNodeHandle();
-        pubMapDat_ = nhRos.advertise<nav_msgs::OccupancyGrid>(srvParams.map_topic, 1, true);
-        pubMapInfo_ = nhRos.advertise<nav_msgs::MapMetaData>(srvParams.map_info_topic, 1, true);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubMapDat_ = nhRos->create_publisher<nav_msgs::msg::OccupancyGrid>(srvParams.map_topic, 1);
+        pubMapInfo_ = nhRos->create_publisher<nav_msgs::msg::MapMetaData>(srvParams.map_info_topic, 1);
     }
 
     ServerExploreMapPublishWorker::~ServerExploreMapPublishWorker()
@@ -375,15 +445,15 @@ namespace slamware_ros_sdk {
             return;
         }
 
-        nav_msgs::GetMap::Response msgMap;
+        nav_msgs::srv::GetMap::Response msgMap;
         wkDat->exploreMapHolder.fillRosMapMsg(msgMap);
 
         // Set the header information on the map
-        msgMap.map.header.stamp = ros::Time::now();
+        msgMap.map.header.stamp = rclcpp::Time();
         msgMap.map.header.frame_id = srvParams.map_frame;
 
-        pubMapDat_.publish(msgMap.map);
-        pubMapInfo_.publish(msgMap.map.info);
+        pubMapDat_->publish(msgMap.map);
+        pubMapInfo_->publish(msgMap.map.info);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -397,8 +467,8 @@ namespace slamware_ros_sdk {
         , absAngleIncrement_(C_FLT_2PI / compensatedAngleCnt_)
     {
         const auto& srvParams = serverParams();
-        auto& nhRos = rosNodeHandle();
-        pubLaserScan_ = nhRos.advertise<sensor_msgs::LaserScan>(srvParams.scan_topic, 10);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubLaserScan_ = nhRos->create_publisher<sensor_msgs::msg::LaserScan>(srvParams.scan_topic, 10);
     }
 
     ServerLaserScanWorker::~ServerLaserScanWorker()
@@ -409,18 +479,18 @@ namespace slamware_ros_sdk {
     void ServerLaserScanWorker::doPerform(slamware_platform_t& pltfm)
     {
         const auto& srvParams = serverParams();
-        auto& tfBrdcst = tfBroadcaster();
+        auto tfBrdcst = tfBroadcaster();
         auto wkDat = workData();
 
-        ros::Time startScanTime = ros::Time::now();
+        rclcpp::Time startScanTime = rclcpp::Time();
         rpos::features::system_resource::LaserScan tLs = pltfm.getLaserScan();
-        ros::Time endScanTime = ros::Time::now();
-        double dblScanDur = (endScanTime - startScanTime).toSec();
+        rclcpp::Time endScanTime = rclcpp::Time();
+        double dblScanDur = (endScanTime - startScanTime).seconds();
 
         const auto& points = tLs.getLaserPoints();
         if (points.size() < 2)
         {
-            ROS_ERROR("laser points count: %u, too small, skip publish.", (unsigned int)points.size());
+            RCLCPP_ERROR(rosNodeHandle()->get_logger() , "laser points count: %u, too small, skip publish.", (unsigned int)points.size());
             return;
         }
 
@@ -431,7 +501,7 @@ namespace slamware_ros_sdk {
         //    , laserPose.x(), laserPose.y(), laserPose.yaw()
         //    );
 
-        sensor_msgs::LaserScan msgScan;
+        sensor_msgs::msg::LaserScan msgScan;
         msgScan.header.stamp = startScanTime;
         msgScan.header.frame_id = srvParams.laser_frame;
         fillRangeMinMaxInMsg_(points, msgScan);
@@ -465,17 +535,36 @@ namespace slamware_ros_sdk {
         msgScan.time_increment = dblScanDur / (double)(msgScan.ranges.size() - 1);
 
         {
-            tf::Transform laserTrans;
-            laserTrans.setOrigin(tf::Vector3(laserPose.x(), laserPose.y(), 0.0));
-            tf::Quaternion qLaserTrans = tf::createQuaternionFromYaw(laserPose.yaw());
-            laserTrans.setRotation(qLaserTrans);
-            tfBrdcst.sendTransform(tf::StampedTransform(laserTrans, startScanTime, srvParams.map_frame, srvParams.laser_frame));
+            geometry_msgs::msg::TransformStamped transformStamped;
+            transformStamped.header.stamp = rclcpp::Time();
+            transformStamped.header.frame_id = srvParams.map_frame;
+            transformStamped.child_frame_id = srvParams.laser_frame;
+            transformStamped.transform.translation.x = laserPose.x();
+            transformStamped.transform.translation.y = laserPose.y();
+            transformStamped.transform.translation.z = 0.0;
+
+            tf2::Matrix3x3 obs_mat;
+            obs_mat.setEulerYPR(laserPose.yaw(),0.0,0.0);
+
+            tf2::Quaternion q_tf;
+            obs_mat.getRotation(q_tf);
+            transformStamped.transform.rotation.x = q_tf.getX();
+            transformStamped.transform.rotation.y = q_tf.getY();
+            transformStamped.transform.rotation.z = q_tf.getZ();
+            transformStamped.transform.rotation.w = q_tf.getW();
+            tfBrdcst->sendTransform(transformStamped);
+
+//            tf::Transform laserTrans;
+//            laserTrans.setOrigin(tf::Vector3(laserPose.x(), laserPose.y(), 0.0));
+//            tf::Quaternion qLaserTrans = tf::createQuaternionFromYaw(laserPose.yaw());
+//            laserTrans.setRotation(qLaserTrans);
+//            tfBrdcst.sendTransform(tf::StampedTransform(laserTrans, startScanTime, srvParams.map_frame, srvParams.laser_frame));
         }
-        pubLaserScan_.publish(msgScan);
+        pubLaserScan_->publish(msgScan);
     }
 
     void ServerLaserScanWorker::fillRangeMinMaxInMsg_(const std::vector<rpos::core::LaserPoint> & laserPoints
-            , sensor_msgs::LaserScan& msgScan
+            , sensor_msgs::msg::LaserScan& msgScan
             ) const
     {
         msgScan.range_min = std::numeric_limits<float>::infinity();
@@ -551,7 +640,7 @@ namespace slamware_ros_sdk {
     }
 
     void ServerLaserScanWorker::compensateAndfillRangesInMsg_(const std::vector<rpos::core::LaserPoint> & laserPoints
-            , sensor_msgs::LaserScan& msgScan
+            , sensor_msgs::msg::LaserScan& msgScan
             ) const
     {
         BOOST_ASSERT(2 <= laserPoints.size());
@@ -606,8 +695,8 @@ namespace slamware_ros_sdk {
         : ServerWorkerBase(pRosSdkServer, wkName, triggerInterval)
     {
         const auto& srvParams = serverParams();
-        auto& nhRos = rosNodeHandle();
-        pubSensorsInfo_ = nhRos.advertise<slamware_ros_sdk::BasicSensorInfoArray>(srvParams.basic_sensors_info_topic, 1, true);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubSensorsInfo_ = nhRos->create_publisher<BasicSensorInfoArray>(srvParams.basic_sensors_info_topic, 1);
     }
 
     ServerBasicSensorsInfoWorker::~ServerBasicSensorsInfoWorker()
@@ -623,7 +712,7 @@ namespace slamware_ros_sdk {
             sensors_info_map_t sensorsInfo;
             if (!getSensorsInfo_(pltfm, sensorsInfo))
             {
-                ROS_ERROR("failed to get sensors info from slamware platform.");
+                RCLCPP_ERROR(rosNodeHandle()->get_logger() ,"failed to get sensors info from slamware platform.");
                 return;
             }
             if (isSensorsInfoAsTheSame_(wkDat->sensorsInfo, sensorsInfo))
@@ -633,7 +722,7 @@ namespace slamware_ros_sdk {
             sltcToRosMsg(wkDat->sensorsInfo, wkDat->rosBasicSensorsInfo);
         }
 
-        slamware_ros_sdk::BasicSensorInfoArray msgSensorsInfo;
+        BasicSensorInfoArray msgSensorsInfo;
         const size_t sensorsCnt = wkDat->rosBasicSensorsInfo.size();
         msgSensorsInfo.sensors_info.resize(sensorsCnt);
         size_t t = 0;
@@ -643,8 +732,8 @@ namespace slamware_ros_sdk {
             BOOST_ASSERT(rcRosInfo.id == cit->first);
             msgSensorsInfo.sensors_info[t] = rcRosInfo;
         }
-        pubSensorsInfo_.publish(msgSensorsInfo);
-        ROS_INFO("new sensors info published, sensorsCnt: %u.", (unsigned int)sensorsCnt);
+        pubSensorsInfo_->publish(msgSensorsInfo);
+        RCLCPP_INFO(rosNodeHandle()->get_logger() ,"new sensors info published, sensorsCnt: %u.", (unsigned int)sensorsCnt);
     }
 
     bool ServerBasicSensorsInfoWorker::getSensorsInfo_(slamware_platform_t& pltfm, sensors_info_map_t& sensorsInfo) const
@@ -666,7 +755,7 @@ namespace slamware_ros_sdk {
         const size_t sensorsCnt = sensorsInfoA.size();
         if (sensorsInfoB.size() != sensorsCnt)
         {
-            ROS_INFO("sensorsCnt: %u --> %u.", (unsigned int)sensorsCnt, (unsigned int)sensorsInfoB.size());
+            RCLCPP_INFO(rosNodeHandle()->get_logger() ,"sensorsCnt: %u --> %u.", (unsigned int)sensorsCnt, (unsigned int)sensorsInfoB.size());
             return false;
         }
 
@@ -678,7 +767,7 @@ namespace slamware_ros_sdk {
             auto citB = sensorsInfoB.find(rcInfoA.id);
             if (sensorsInfoB.cend() == citB)
             {
-                ROS_INFO("sensor id %d has gone away.", rcInfoA.id);
+                RCLCPP_INFO(rosNodeHandle()->get_logger() ,"sensor id %d has gone away.", rcInfoA.id);
                 return false;
             }
 
@@ -687,17 +776,17 @@ namespace slamware_ros_sdk {
 
             if (rcInfoA.coreSensorType != rcInfoB.coreSensorType)
             {
-                ROS_INFO("sensor id %d, core type: %d --> %d.", rcInfoA.id, (int)rcInfoA.coreSensorType, (int)rcInfoB.coreSensorType);
+                RCLCPP_INFO(rosNodeHandle()->get_logger() ,"sensor id %d, core type: %d --> %d.", rcInfoA.id, (int)rcInfoA.coreSensorType, (int)rcInfoB.coreSensorType);
                 return false;
             }
             if (rcInfoA.type != rcInfoB.type)
             {
-                ROS_INFO("sensor id %d, impact type: %d --> %d.", rcInfoA.id, (int)rcInfoA.type, (int)rcInfoB.type);
+                RCLCPP_INFO(rosNodeHandle()->get_logger() ,"sensor id %d, impact type: %d --> %d.", rcInfoA.id, (int)rcInfoA.type, (int)rcInfoB.type);
                 return false;
             }
             if (!(rcInfoA.pose == rcInfoB.pose))
             {
-                ROS_INFO("sensor id %d, pose changed.", rcInfoA.id);
+                RCLCPP_INFO(rosNodeHandle()->get_logger() ,"sensor id %d, pose changed.", rcInfoA.id);
                 return false;
             }
         }
@@ -713,8 +802,8 @@ namespace slamware_ros_sdk {
         : ServerWorkerBase(pRosSdkServer, wkName, triggerInterval)
     {
         const auto& srvParams = serverParams();
-        auto& nhRos = rosNodeHandle();
-        pubSensorsValues_ = nhRos.advertise<slamware_ros_sdk::BasicSensorValueDataArray>(srvParams.basic_sensors_values_topic, 5);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubSensorsValues_ = nhRos->create_publisher<BasicSensorValueDataArray>(srvParams.basic_sensors_values_topic, 5);
     }
 
     ServerBasicSensorsValuesWorker::~ServerBasicSensorsValuesWorker()
@@ -729,11 +818,11 @@ namespace slamware_ros_sdk {
         sensors_values_map_t sensorsValues;
         if (!getSensorsValues_(pltfm, sensorsValues))
         {
-            ROS_ERROR("failed to get sensors values from slamware platform.");
+            RCLCPP_ERROR(rosNodeHandle()->get_logger() ,"failed to get sensors values from slamware platform.");
             return;
         }
 
-        slamware_ros_sdk::BasicSensorValueDataArray msgSensorsValues;
+        BasicSensorValueDataArray msgSensorsValues;
         const size_t sensorsCnt = wkDat->rosBasicSensorsInfo.size();
         msgSensorsValues.values_data.resize(sensorsCnt);
         size_t t = 0;
@@ -754,7 +843,7 @@ namespace slamware_ros_sdk {
             destVal.value = rcSrcVal.value;
             destVal.is_in_impact = isSensorValueImpact_(rcInfo, rcSrcVal);
         }
-        pubSensorsValues_.publish(msgSensorsValues);
+        pubSensorsValues_->publish(msgSensorsValues);
     }
 
     bool ServerBasicSensorsValuesWorker::getSensorsValues_(slamware_platform_t& pltfm, sensors_values_map_t& sensorsValues) const
@@ -795,8 +884,8 @@ namespace slamware_ros_sdk {
         : ServerWorkerBase(pRosSdkServer, wkName, triggerInterval)
     {
         const auto& srvParams = serverParams();
-        auto& nhRos = rosNodeHandle();
-        pubPlanPath_ = nhRos.advertise<nav_msgs::Path>(srvParams.path_topic, 10);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubPlanPath_ = nhRos->create_publisher<nav_msgs::msg::Path>(srvParams.path_topic, 10);
     }
 
     ServerPlanPathWorker::~ServerPlanPathWorker()
@@ -808,33 +897,33 @@ namespace slamware_ros_sdk {
     {
         const auto& srvParams = serverParams();
         
-        nav_msgs::Path msgPath;
+        nav_msgs::msg::Path msgPath;
         msgPath.poses.resize(0);
         msgPath.header.frame_id = srvParams.map_frame;
 
         rpos::actions::MoveAction actMove = pltfm.getCurrentAction();
         if (!actMove)
         {
-            msgPath.header.stamp = ros::Time();
-            pubPlanPath_.publish(msgPath);
+            msgPath.header.stamp = rclcpp::Time();
+            pubPlanPath_->publish(msgPath);
             return;
         }
         rpos::features::motion_planner::Path remPath = actMove.getRemainingPath();
         if (!remPath)
         {
-            msgPath.header.stamp = ros::Time();
-            pubPlanPath_.publish(msgPath);
+            msgPath.header.stamp = rclcpp::Time();
+            pubPlanPath_->publish(msgPath);
             return;
         }
 
         const auto& remPathPoints = remPath.getPoints();
         msgPath.poses.resize(remPathPoints.size());
-        msgPath.header.stamp = ros::Time();
+        msgPath.header.stamp = rclcpp::Time();
         for (size_t i = 0; i < remPathPoints.size(); ++i)
         {
-            geometry_msgs::PoseStamped tPoseStamp;
+            geometry_msgs::msg::PoseStamped tPoseStamp;
             tPoseStamp.header.frame_id = srvParams.map_frame;
-            tPoseStamp.header.stamp = ros::Time();
+            tPoseStamp.header.stamp = rclcpp::Time();
             sltcToRosMsg(remPathPoints[i], tPoseStamp.pose.position);
             tPoseStamp.pose.orientation.x = 0;
             tPoseStamp.pose.orientation.y = 0;
@@ -842,7 +931,7 @@ namespace slamware_ros_sdk {
             tPoseStamp.pose.orientation.w = 1;
             msgPath.poses[i] = tPoseStamp;
         }
-        pubPlanPath_.publish(msgPath);
+        pubPlanPath_->publish(msgPath);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -853,8 +942,8 @@ namespace slamware_ros_sdk {
         )
         : ServerWorkerBase(pRosSdkServer, wkName, triggerInterval)
     {
-        auto& nhRos = rosNodeHandle();
-        pubRobotBasicState_ = nhRos.advertise<RobotBasicState>("robot_basic_state", 1, true);
+        rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+        pubRobotBasicState_ = nhRos->create_publisher<RobotBasicState>("robot_basic_state", 1);
     }
 
     ServerRobotBasicStateWorker::~ServerRobotBasicStateWorker()
@@ -878,7 +967,7 @@ namespace slamware_ros_sdk {
         msgRobotBasicState.is_dc_in = pwrStatus.isDCConnected;
         msgRobotBasicState.is_charging = pwrStatus.isCharging;
 
-        pubRobotBasicState_.publish(msgRobotBasicState);
+        pubRobotBasicState_->publish(msgRobotBasicState);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -903,7 +992,8 @@ namespace slamware_ros_sdk {
 
     void ServerArtifactLinesWorker::resetOnWorkLoopBegin()
     {
-        pubArtifactLines_= ros::Publisher();
+//        pubArtifactLines_= rclcpp::Publisher();
+        pubArtifactLines_.reset();
         isFeatureSupported_ = false;
 
         this->super_t::resetOnWorkLoopBegin();
@@ -924,7 +1014,7 @@ namespace slamware_ros_sdk {
         catch (const rpos::robot_platforms::UnsupportedCommandException& excp)
         {
             isFeatureSupported_ = false;
-            ROS_WARN("worker: %s, reinitWorkLoop(), usage: %d, exception: %s.", getWorkerName().c_str(), (int)params_.usage.usage, excp.what());
+            RCLCPP_WARN(rosNodeHandle()->get_logger() ,"worker: %s, reinitWorkLoop(), usage: %d, exception: %s.", getWorkerName().c_str(), (int)params_.usage.usage, excp.what());
         }
 
         if (isFeatureSupported_)
@@ -932,9 +1022,9 @@ namespace slamware_ros_sdk {
             Line2DFlt32Array msgLines;
             sltcToRosMsg(vLines, msgLines.lines);
 
-            auto& nhRos = rosNodeHandle();
-            pubArtifactLines_ = nhRos.advertise<Line2DFlt32Array>(params_.topic, params_.queueSize, params_.latch);
-            pubArtifactLines_.publish(msgLines);
+            rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
+            pubArtifactLines_ = nhRos->create_publisher<Line2DFlt32Array>(params_.topic, params_.queueSize);
+            pubArtifactLines_->publish(msgLines);
         }
 
         isWorkLoopInitOk_ = true;
@@ -951,7 +1041,7 @@ namespace slamware_ros_sdk {
         Line2DFlt32Array msgLines;
         sltcToRosMsg(vLines, msgLines.lines);
 
-        pubArtifactLines_.publish(msgLines);
+        pubArtifactLines_->publish(msgLines);
     }
 
     //////////////////////////////////////////////////////////////////////////

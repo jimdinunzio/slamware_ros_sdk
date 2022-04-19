@@ -3,13 +3,13 @@
 
 #include "server_worker_base.h"
 
-#include <sensor_msgs/LaserScan.h>
-#include <std_srvs/Empty.h>
-#include <std_msgs/Float64.h>
-#include <nav_msgs/GetMap.h>
-#include <nav_msgs/Path.h>
-#include <geometry_msgs/Twist.h>
-#include <nav_msgs/Odometry.h>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include <std_srvs/srv/empty.hpp>
+#include <std_msgs/msg/float64.hpp>
+#include <nav_msgs/srv/get_map.hpp>
+#include <nav_msgs/msg/path.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 namespace slamware_ros_sdk {
 
@@ -33,7 +33,7 @@ namespace slamware_ros_sdk {
         virtual void doPerform(slamware_platform_t& pltfm);
 
     private:
-        ros::Publisher pubRobotDeviceInfo_;
+        rclcpp::Publisher<RobotDeviceInfo>::SharedPtr  pubRobotDeviceInfo_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ namespace slamware_ros_sdk {
         virtual void doPerform(slamware_platform_t& pltfm);
 
     private:
-        ros::Publisher pubRobotPose_;
+        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubRobotPose_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -115,8 +115,11 @@ namespace slamware_ros_sdk {
         virtual void doPerform(slamware_platform_t& pltfm);
 
     private:
-        ros::Publisher pubMapDat_;
-        ros::Publisher pubMapInfo_;
+        rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr pubMapDat_;
+        rclcpp::Publisher<nav_msgs::msg::MapMetaData>::SharedPtr pubMapInfo_;
+
+//        ros::Publisher pubMapDat_;
+//        ros::Publisher pubMapInfo_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -135,7 +138,7 @@ namespace slamware_ros_sdk {
 
     private:
         void fillRangeMinMaxInMsg_(const std::vector<rpos::core::LaserPoint> & laserPoints
-            , sensor_msgs::LaserScan& msgScan
+            , sensor_msgs::msg::LaserScan& msgScan
             ) const;
 
         float calcAngleInNegativePiToPi_(float angle) const;
@@ -145,14 +148,14 @@ namespace slamware_ros_sdk {
             ) const;
         bool isSrcAngleMoreCloseThanOldSrcAngle_(float srcAngle, float destAngle, float oldSrcAngle) const;
         void compensateAndfillRangesInMsg_(const std::vector<rpos::core::LaserPoint> & laserPoints
-            , sensor_msgs::LaserScan& msgScan
+            , sensor_msgs::msg::LaserScan& msgScan
             ) const;
 
     private:
         std::uint32_t compensatedAngleCnt_;
         float absAngleIncrement_;
 
-        ros::Publisher pubLaserScan_;
+        rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr pubLaserScan_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -176,7 +179,7 @@ namespace slamware_ros_sdk {
         bool isSensorsInfoAsTheSame_(const sensors_info_map_t& sensorsInfoA, const sensors_info_map_t& sensorsInfoB) const;
 
     private:
-        ros::Publisher pubSensorsInfo_;
+        rclcpp::Publisher<BasicSensorInfoArray>::SharedPtr pubSensorsInfo_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -202,7 +205,7 @@ namespace slamware_ros_sdk {
         bool isSensorValueImpact_(const BasicSensorInfo& basicInfo, const sensor_value_t& sensorVal) const;
 
     private:
-        ros::Publisher pubSensorsValues_;
+        rclcpp::Publisher<BasicSensorValueDataArray>::SharedPtr pubSensorsValues_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -220,7 +223,7 @@ namespace slamware_ros_sdk {
         virtual void doPerform(slamware_platform_t& pltfm);
 
     private:
-        ros::Publisher pubPlanPath_;
+        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPlanPath_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -238,7 +241,7 @@ namespace slamware_ros_sdk {
         virtual void doPerform(slamware_platform_t& pltfm);
 
     private:
-        ros::Publisher pubRobotBasicState_;
+        rclcpp::Publisher<RobotBasicState>::SharedPtr pubRobotBasicState_;
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -282,7 +285,7 @@ namespace slamware_ros_sdk {
         rpos::features::artifact_provider::ArtifactUsage sltcUsage_;
 
         bool isFeatureSupported_;
-        ros::Publisher pubArtifactLines_;
+        rclcpp::Publisher<Line2DFlt32Array>::SharedPtr pubArtifactLines_;
     };
 
     //////////////////////////////////////////////////////////////////////////

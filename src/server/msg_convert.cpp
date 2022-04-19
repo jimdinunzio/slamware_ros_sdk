@@ -1,6 +1,7 @@
 
 #include "msg_convert.h"
-
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 #include <stdexcept>
 
 namespace slamware_ros_sdk {
@@ -267,26 +268,49 @@ namespace slamware_ros_sdk {
     	rosMsgToOptional(rosMsg.speed_ratio, sltcVal.speed_ratio);
     }
 
-    void MsgConvert<geometry_msgs::Point, rpos::core::Location>::toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg)
+    void MsgConvert<geometry_msgs::msg::Point, rpos::core::Location>::toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg)
     {
     	rosMsg.x = sltcVal.x();
     	rosMsg.y = sltcVal.y();
     	rosMsg.z = sltcVal.z();
     }
 
-    void MsgConvert<geometry_msgs::Point, rpos::core::Location>::toSltc(const ros_msg_t& rosMsg, sltc_val_t& sltcVal)
+    void MsgConvert<geometry_msgs::msg::Point, rpos::core::Location>::toSltc(const ros_msg_t& rosMsg, sltc_val_t& sltcVal)
     {
     	sltcVal.x() = rosMsg.x;
     	sltcVal.y() = rosMsg.y;
     	sltcVal.z() = rosMsg.z;
     }
 
-    void MsgConvert<geometry_msgs::Quaternion, rpos::core::Rotation>::toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg)
+    void MsgConvert<geometry_msgs::msg::Quaternion, rpos::core::Rotation>::toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg)
     {
-        rosMsg = tf::createQuaternionMsgFromRollPitchYaw(sltcVal.roll(), sltcVal.pitch(), sltcVal.yaw());
+//        rosMsg = tf2::createQuaternionMsgFromRollPitchYaw(sltcVal.roll(), sltcVal.pitch(), sltcVal.yaw());
+
+        tf2::Matrix3x3 obs_mat;
+        obs_mat.setEulerYPR(sltcVal.yaw(),sltcVal.pitch(),sltcVal.roll());
+
+        tf2::Quaternion q_tf;
+        obs_mat.getRotation(q_tf);
+        rosMsg.x = q_tf.getX();
+        rosMsg.y = q_tf.getY();
+        rosMsg.z = q_tf.getZ();
+        rosMsg.w = q_tf.getW();
+
+//        // OR
+//        double cy = cos(sltcVal.yaw() * 0.5);
+//        double sy = sin(sltcVal.yaw() * 0.5);
+//        double cp = cos(sltcVal.pitch() * 0.5);
+//        double sp = sin(sltcVal.pitch() * 0.5);
+//        double cr = cos(sltcVal.roll() * 0.5);
+//        double sr = sin(sltcVal.roll() * 0.5);
+//
+//        rosMsg.x = sr * cp * cy - cr * sp * sy;
+//        rosMsg.y = cr * sp * cy + sr * cp * sy;
+//        rosMsg.z = cr * cp * sy - sr * sp * cy;
+//        rosMsg.w = cr * cp * cy + sr * sp * sy;
     }
 
-    void MsgConvert<geometry_msgs::Quaternion, rpos::core::Rotation>::toSltc(const ros_msg_t& rosMsg, sltc_val_t& sltcVal)
+    void MsgConvert<geometry_msgs::msg::Quaternion, rpos::core::Rotation>::toSltc(const ros_msg_t& rosMsg, sltc_val_t& sltcVal)
     {
         if (0.0 == rosMsg.x && 0.0 == rosMsg.y && 0.0 == rosMsg.z && 0.0 == rosMsg.w)
         {
@@ -294,34 +318,34 @@ namespace slamware_ros_sdk {
             return;
         }
 
-        const tf::Quaternion tq(rosMsg.x, rosMsg.y, rosMsg.z, rosMsg.w);
-        const tf::Matrix3x3 tMat(tq);
+        const tf2::Quaternion tq(rosMsg.x, rosMsg.y, rosMsg.z, rosMsg.w);
+        const tf2::Matrix3x3 tMat(tq);
         tMat.getRPY(sltcVal.roll(), sltcVal.pitch(), sltcVal.yaw());
 
         if (std::isnan(sltcVal.roll()))
         {
-            ROS_WARN("Quaternion to RPY, roll is nan, set to zero.");
+            std::cout<<"Quaternion to RPY, roll is nan, set to zero."<< std::endl;
             sltcVal.roll() = 0.0;
         }
         if (std::isnan(sltcVal.pitch()))
         {
-            ROS_WARN("Quaternion to RPY, pitch is nan, set to zero.");
+            std::cout<<"Quaternion to RPY, pitch is nan, set to zero."<< std::endl;
             sltcVal.pitch() = 0.0;
         }
         if (std::isnan(sltcVal.yaw()))
         {
-            ROS_WARN("Quaternion to RPY, yaw is nan, set to zero.");
+            std::cout<<"Quaternion to RPY, yaw is nan, set to zero."<< std::endl;
             sltcVal.yaw() = 0.0;
         }
     }
 
-    void MsgConvert<geometry_msgs::Pose, rpos::core::Pose>::toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg)
+    void MsgConvert<geometry_msgs::msg::Pose, rpos::core::Pose>::toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg)
     {
         sltcToRosMsg(sltcVal.location(), rosMsg.position);
         sltcToRosMsg(sltcVal.rotation(), rosMsg.orientation);
     }
 
-    void MsgConvert<geometry_msgs::Pose, rpos::core::Pose>::toSltc(const ros_msg_t& rosMsg, sltc_val_t& sltcVal)
+    void MsgConvert<geometry_msgs::msg::Pose, rpos::core::Pose>::toSltc(const ros_msg_t& rosMsg, sltc_val_t& sltcVal)
     {
         rosMsgToSltc(rosMsg.position, sltcVal.location());
         rosMsgToSltc(rosMsg.orientation, sltcVal.rotation());

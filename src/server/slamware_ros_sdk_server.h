@@ -8,9 +8,8 @@
 #pragma once
 
 #include "server_workers.h"
-
-#include <slamware_ros_sdk/SyncGetStcm.h>
-#include <slamware_ros_sdk/SyncSetStcm.h>
+#include <slamware_ros_msgs/srv/sync_get_stcm.hpp>
+#include <slamware_ros_msgs/srv/sync_set_stcm.hpp>
 
 #include <message_filters/subscriber.h>
 
@@ -20,6 +19,7 @@
 #include <boost/thread/lock_guard.hpp>
 
 #include <boost/function.hpp>
+using namespace slamware_ros_msgs::msg;
 
 namespace slamware_ros_sdk {
 
@@ -35,6 +35,7 @@ namespace slamware_ros_sdk {
         bool startRun(std::string& errMsg);
         void requestStop();
         void waitUntilStopped(); // not thread-safe
+        rclcpp::Node::SharedPtr rosNodeHandle_() { return nh_; }
 
     public:
         void requestSyncMap();
@@ -55,18 +56,32 @@ namespace slamware_ros_sdk {
             typedef MsgT                                    msg_t;
             typedef typename msg_t::ConstPtr                const_msg_shared_ptr;
             typedef void (SlamwareRosSdkServer::*msg_cb_perform_fun_t)(slamware_platform_t&, const const_msg_shared_ptr&);
-            typedef boost::function< void(const const_msg_shared_ptr&) >        ros_cb_fun_t; // callback function for ROS.
+            //Both the following are good
+            typedef std::function< void(const const_msg_shared_ptr) >        ros_cb_fun_t; // callback function for ROS.
+//            typedef std::function<void(std::shared_ptr<MsgT>)> ros_cb_fun_t; // callback function for ROS.
         };
 
         template<class SrvMsgT>
         struct srv_cb_help_t
         {
-            typedef SrvMsgT                             srv_msg_t;
-            typedef typename srv_msg_t::Request         request_t;
-            typedef typename srv_msg_t::Response        response_t;
-            typedef bool (SlamwareRosSdkServer::*srv_cb_perform_fun_t)(slamware_platform_t&, request_t&, response_t&);
-            typedef boost::function< bool(request_t&, response_t&) >            ros_cb_fun_t; // callback function for ROS.
+            typedef SrvMsgT srv_msg_t;
+            typedef std::shared_ptr<typename srv_msg_t::Request> request_t;
+            typedef std::shared_ptr<typename srv_msg_t::Response> response_t;
+
+            typedef bool (SlamwareRosSdkServer::*srv_cb_perform_fun_t)(slamware_platform_t &, request_t, response_t);
+
+            typedef std::function<bool(request_t, response_t)> ros_cb_fun_t; // callback function for ROS.
         };
+
+//        template<class SrvMsgT>
+//        struct srv_cb_help_t
+//        {
+//            typedef SrvMsgT                             srv_msg_t;
+//            typedef typename srv_msg_t::Request         request_t;
+//            typedef typename srv_msg_t::Response        response_t;
+//            typedef bool (SlamwareRosSdkServer::*srv_cb_perform_fun_t)(slamware_platform_t&, request_t&, response_t&);
+//            typedef std::function< bool(request_t, response_t) >            ros_cb_fun_t; // callback function for ROS.
+//        };
 
     private:
         static boost::chrono::milliseconds sfConvFloatSecToBoostMs_(float fSec);
@@ -74,13 +89,16 @@ namespace slamware_ros_sdk {
         bool isRunning_() const { return ServerStateRunning == state_.load(); }
         bool shouldContinueRunning_() const;
 
-        const ros::NodeHandle& rosNodeHandle_() const { return nh_; }
-        ros::NodeHandle& rosNodeHandle_() { return nh_; }
+        const rclcpp::Node::SharedPtr rosNodeHandle_() const { return nh_; }
+
 
         const ServerParams& serverParams_() const { return params_; }
         
-        const tf::TransformBroadcaster& tfBroadcaster_() const { return tfBrdcstr_; }
-        tf::TransformBroadcaster& tfBroadcaster_() { return tfBrdcstr_; }
+//        const tf2_ros::TransformBroadcaster& tfBroadcaster_() const { return tfBrdcstr_; }
+        std::shared_ptr<tf2_ros::TransformBroadcaster> tfBroadcaster_() const { return tfBrdcstr_; }
+//        tf2_ros::TransformBroadcaster tfBroadcaster_() { return tfBrdcstr_; }
+        std::shared_ptr<tf2_ros::TransformBroadcaster> tfBroadcaster_() { return tfBrdcstr_; }
+
 
         ServerWorkData_ConstPtr safeGetWorkData_() const;
         ServerWorkData_Ptr safeGetMutableWorkData_();
@@ -103,6 +121,9 @@ namespace slamware_ros_sdk {
         bool reinitWorkLoop_(slamware_platform_t& pltfm);
         void loopWork_();
 
+        //        rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr rviz_sub;
+//        rviz_sub = nh->create_subscription<geometry_msgs::msg::PointStamped>("topic", 100, rvizCallBack);
+
         //////////////////////////////////////////////////////////////////////////
         // subscribed messages
         //////////////////////////////////////////////////////////////////////////
@@ -112,17 +133,18 @@ namespace slamware_ros_sdk {
             , const std::string& msgTopic
             , const typename msg_cb_help_t<MsgT>::const_msg_shared_ptr & msg
             );
-        template<class MsgT>
-        ros::Subscriber subscribe_T_(const std::string& msgTopic
-            , std::uint32_t queueSize
-            , typename msg_cb_help_t<MsgT>::msg_cb_perform_fun_t mfpCbPerform
-            );
 
-        void msgCbRobotControl_(slamware_platform_t& pltfm, const geometry_msgs::Twist::ConstPtr& msg);
-        void msgCbMoveToGoal_(slamware_platform_t& pltfm, const geometry_msgs::PoseStamped::ConstPtr& msg);
-        
+        template<class MsgT>
+        typename rclcpp::Subscription<MsgT>::SharedPtr
+        subscribe_T_(const std::string &msgTopic,std::uint32_t queueSize,
+                                           typename msg_cb_help_t<MsgT>::msg_cb_perform_fun_t mfpCbPerform
+        );
+
+        void msgCbRobotControl_(slamware_platform_t& pltfm, const geometry_msgs::msg::Twist::ConstPtr& msg);
+        void msgCbMoveToGoal_(slamware_platform_t& pltfm, const geometry_msgs::msg::PoseStamped::ConstPtr& msg);
+
         void msgCbSyncMap_(slamware_platform_t& pltfm, const SyncMapRequest::ConstPtr& msg);
-        void msgCbSetPose_(slamware_platform_t& pltfm, const geometry_msgs::Pose::ConstPtr& msg);
+        void msgCbSetPose_(slamware_platform_t& pltfm, const geometry_msgs::msg::Pose::ConstPtr& msg);
 
         void msgCbRecoverLocalization_(slamware_platform_t& pltfm, const RecoverLocalizationRequest::ConstPtr& msg);
         void msgCbClearMap_(slamware_platform_t& pltfm, const ClearMapRequest::ConstPtr& msg);
@@ -153,27 +175,36 @@ namespace slamware_ros_sdk {
         template<class SrvMsgT>
         bool srvCbWrapperFun_T_(typename srv_cb_help_t<SrvMsgT>::srv_cb_perform_fun_t mfpCbPerform
             , const std::string& srvMsgTopic
-            , typename srv_cb_help_t<SrvMsgT>::request_t& req
-            , typename srv_cb_help_t<SrvMsgT>::response_t& resp
-            );
-        template<class SrvMsgT>
-        ros::ServiceServer advertiseService_T_(const std::string& srvMsgTopic
-            , typename srv_cb_help_t<SrvMsgT>::srv_cb_perform_fun_t mfpCbPerform
+            , typename srv_cb_help_t<SrvMsgT>::request_t req
+            , typename srv_cb_help_t<SrvMsgT>::response_t resp
             );
 
-        bool srvCbSyncGetStcm_(slamware_platform_t& pltfm, SyncGetStcm::Request& req, SyncGetStcm::Response& resp);
-        bool srvCbSyncSetStcm_(slamware_platform_t& pltfm, SyncSetStcm::Request& req, SyncSetStcm::Response& resp);
+        template<class SrvMsgT>
+        typename rclcpp::Service<SrvMsgT>::SharedPtr advertiseService_T_(const std::string& srvMsgTopic
+                , typename srv_cb_help_t<SrvMsgT>::srv_cb_perform_fun_t mfpCbPerform
+        );
+
+//        ros::ServiceServer advertiseService_T_(const std::string& srvMsgTopic
+//            , typename srv_cb_help_t<SrvMsgT>::srv_cb_perform_fun_t mfpCbPerform
+//            );
+
+        bool srvCbSyncGetStcm_(slamware_platform_t& pltfm, std::shared_ptr<slamware_ros_msgs::srv::SyncGetStcm::Request> req,
+                               std::shared_ptr<slamware_ros_msgs::srv::SyncGetStcm::Response> resp);
+        bool srvCbSyncSetStcm_(slamware_platform_t& pltfm, std::shared_ptr<slamware_ros_msgs::srv::SyncSetStcm::Request> req,
+                               std::shared_ptr<slamware_ros_msgs::srv::SyncSetStcm::Response> resp);
 
         //////////////////////////////////////////////////////////////////////////
 
     private:
         boost::atomic<ServerState> state_;
         boost::atomic<bool> isStopRequested_;
-        
-        ros::NodeHandle nh_;
+
+        rclcpp::Node::SharedPtr nh_;
         ServerParams params_;
 
-        tf::TransformBroadcaster tfBrdcstr_;
+//        tf2_ros::TransformBroadcaster tfBrdcstr_;
+        std::shared_ptr<tf2_ros::TransformBroadcaster> tfBrdcstr_;
+
 
         mutable boost::mutex workDatLock_;
         ServerWorkData_Ptr workDat_;
@@ -181,39 +212,41 @@ namespace slamware_ros_sdk {
         std::vector<ServerWorkerBase_Ptr> serverWorkers_;
 
         // subscriptions
-        ros::Subscriber subRobotControl_;
-        ros::Subscriber subMoveToGoal_;
+        rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr rviz_sub;
+
+        rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subRobotControl_;
+        rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subMoveToGoal_;
         
-        ros::Subscriber subSyncMap_;
-        ros::Subscriber subSetPose_;
+        rclcpp::Subscription<SyncMapRequest>::SharedPtr subSyncMap_;
+        rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr subSetPose_;
 
-        ros::Subscriber subRecoverLocalization_;
-        ros::Subscriber subClearMap_;
-        ros::Subscriber subSetMapUpdate_;
-        ros::Subscriber subSetMapLocalization_;
+        rclcpp::Subscription<RecoverLocalizationRequest>::SharedPtr subRecoverLocalization_;
+        rclcpp::Subscription<ClearMapRequest>::SharedPtr subClearMap_;
+        rclcpp::Subscription<SetMapUpdateRequest>::SharedPtr subSetMapUpdate_;
+        rclcpp::Subscription<SetMapLocalizationRequest>::SharedPtr subSetMapLocalization_;
 
-        ros::Subscriber subMoveByDirection_;
-        ros::Subscriber subMoveByTheta_;
-        ros::Subscriber subMoveTo_;
-        ros::Subscriber subMoveToLocations_;
-        ros::Subscriber subRotateTo_;
-        ros::Subscriber subRotate_;
+        rclcpp::Subscription<MoveByDirectionRequest>::SharedPtr subMoveByDirection_;
+        rclcpp::Subscription<MoveByThetaRequest>::SharedPtr subMoveByTheta_;
+        rclcpp::Subscription<MoveToRequest>::SharedPtr subMoveTo_;
+        rclcpp::Subscription<MoveToLocationsRequest>::SharedPtr subMoveToLocations_;
+        rclcpp::Subscription<RotateToRequest>::SharedPtr subRotateTo_;
+        rclcpp::Subscription<RotateRequest>::SharedPtr subRotate_;
 
-        ros::Subscriber subGoHome_;
-        ros::Subscriber subCancelAction_;
+        rclcpp::Subscription<GoHomeRequest>::SharedPtr subGoHome_;
+        rclcpp::Subscription<CancelActionRequest>::SharedPtr subCancelAction_;
 
-        ros::Subscriber subAddLine_;
-        ros::Subscriber subAddLines_;
-        ros::Subscriber subRemoveLine_;
-        ros::Subscriber subClearLines_;
-        ros::Subscriber subMoveLine_;
-        ros::Subscriber subMoveLines_;
+        rclcpp::Subscription<AddLineRequest>::SharedPtr subAddLine_;
+        rclcpp::Subscription<AddLinesRequest>::SharedPtr subAddLines_;
+        rclcpp::Subscription<RemoveLineRequest>::SharedPtr subRemoveLine_;
+        rclcpp::Subscription<ClearLinesRequest>::SharedPtr subClearLines_;
+        rclcpp::Subscription<MoveLineRequest>::SharedPtr subMoveLine_;
+        rclcpp::Subscription<MoveLinesRequest>::SharedPtr subMoveLines_;
         
         rpos::actions::VelocityControlMoveAction velocityControllAction_;
         
         // services
-        ros::ServiceServer srvSyncGetStcm_;
-        ros::ServiceServer srvSyncSetStcm_;
+        std::shared_ptr<rclcpp::Service<slamware_ros_msgs::srv::SyncGetStcm>> srvSyncGetStcm_;
+        std::shared_ptr<rclcpp::Service<slamware_ros_msgs::srv::SyncSetStcm>> srvSyncSetStcm_;
 
         boost::thread workThread_;
 

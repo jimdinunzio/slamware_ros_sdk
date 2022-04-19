@@ -19,7 +19,7 @@ namespace slamware_ros_sdk {
 
     void ServerParams::resetToDefault()
     {
-        ip_address = "192.168.11.1";
+        ip_address = "192.168.1.37";
         robot_port = 1445;
         reconn_wait_ms = (1000U * 3U);
 
@@ -57,44 +57,44 @@ namespace slamware_ros_sdk {
         goal_topic = "/move_base_simple/goal";
     }
 
-    void ServerParams::setBy(const ros::NodeHandle& nhRos)
+    void ServerParams::setBy(const rclcpp::Node::SharedPtr nhRos)
     {
-        nhRos.getParam("ip_address", ip_address);
-        nhRos.getParam("robot_port", robot_port);
-        nhRos.getParam("reconn_wait_ms", reconn_wait_ms);
+        nhRos->get_parameter("ip_address", ip_address);
+        nhRos->get_parameter("robot_port", robot_port);
+        nhRos->get_parameter("reconn_wait_ms", reconn_wait_ms);
 
-        nhRos.getParam("angle_compensate", angle_compensate);
-        nhRos.getParam("fixed_odom_map_tf", fixed_odom_map_tf);
+        nhRos->get_parameter("angle_compensate", angle_compensate);
+        nhRos->get_parameter("fixed_odom_map_tf", fixed_odom_map_tf);
 
-        nhRos.getParam("robot_frame", robot_frame);
-        nhRos.getParam("laser_frame", laser_frame);
-        nhRos.getParam("map_frame", map_frame);
-        nhRos.getParam("odom_frame", odom_frame);
+        nhRos->get_parameter("robot_frame", robot_frame);
+        nhRos->get_parameter("laser_frame", laser_frame);
+        nhRos->get_parameter("map_frame", map_frame);
+        nhRos->get_parameter("odom_frame", odom_frame);
 
-        nhRos.getParam("robot_pose_pub_period", robot_pose_pub_period);
-        nhRos.getParam("scan_pub_period", scan_pub_period);
-        nhRos.getParam("map_update_period", map_update_period);
-        nhRos.getParam("map_pub_period", map_pub_period);
-        nhRos.getParam("basic_sensors_info_update_period", basic_sensors_info_update_period);
-        nhRos.getParam("basic_sensors_values_pub_period", basic_sensors_values_pub_period);
-        nhRos.getParam("path_pub_period", path_pub_period);
-        nhRos.getParam("robot_basic_state_pub_period", robot_basic_state_pub_period);
-        nhRos.getParam("virtual_walls_pub_period", virtual_walls_pub_period);
-        nhRos.getParam("virtual_tracks_pub_period", virtual_tracks_pub_period);
+        nhRos->get_parameter("robot_pose_pub_period", robot_pose_pub_period);
+        nhRos->get_parameter("scan_pub_period", scan_pub_period);
+        nhRos->get_parameter("map_update_period", map_update_period);
+        nhRos->get_parameter("map_pub_period", map_pub_period);
+        nhRos->get_parameter("basic_sensors_info_update_period", basic_sensors_info_update_period);
+        nhRos->get_parameter("basic_sensors_values_pub_period", basic_sensors_values_pub_period);
+        nhRos->get_parameter("path_pub_period", path_pub_period);
+        nhRos->get_parameter("robot_basic_state_pub_period", robot_basic_state_pub_period);
+        nhRos->get_parameter("virtual_walls_pub_period", virtual_walls_pub_period);
+        nhRos->get_parameter("virtual_tracks_pub_period", virtual_tracks_pub_period);
 
-        nhRos.getParam("map_sync_once_get_max_wh", map_sync_once_get_max_wh);
-        nhRos.getParam("map_update_near_robot_half_wh", map_update_near_robot_half_wh);
+        nhRos->get_parameter("map_sync_once_get_max_wh", map_sync_once_get_max_wh);
+        nhRos->get_parameter("map_update_near_robot_half_wh", map_update_near_robot_half_wh);
 
-        nhRos.getParam("scan_topic", scan_topic);
-        nhRos.getParam("odom_topic", odom_topic);
-        nhRos.getParam("map_topic", map_topic);
-        nhRos.getParam("map_info_topic", map_info_topic);
-        nhRos.getParam("basic_sensors_info_topic", basic_sensors_info_topic);
-        nhRos.getParam("basic_sensors_values_topic", basic_sensors_values_topic);
-        nhRos.getParam("path_topic", path_topic);
+        nhRos->get_parameter("scan_topic", scan_topic);
+        nhRos->get_parameter("odom_topic", odom_topic);
+        nhRos->get_parameter("map_topic", map_topic);
+        nhRos->get_parameter("map_info_topic", map_info_topic);
+        nhRos->get_parameter("basic_sensors_info_topic", basic_sensors_info_topic);
+        nhRos->get_parameter("basic_sensors_values_topic", basic_sensors_values_topic);
+        nhRos->get_parameter("path_topic", path_topic);
 
-        nhRos.getParam("vel_control_topic", vel_control_topic);
-        nhRos.getParam("goal_topic", goal_topic);
+        nhRos->get_parameter("vel_control_topic", vel_control_topic);
+        nhRos->get_parameter("goal_topic", goal_topic);
     }
 
     //////////////////////////////////////////////////////////////////////////

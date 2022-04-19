@@ -1,8 +1,8 @@
 ﻿
 #pragma once
 
-#include <ros/ros.h>
-#include <nav_msgs/GetMap.h>
+#include <rclcpp/rclcpp.hpp>
+#include "nav_msgs/srv/get_map.hpp"
 
 #include <rpos/core/geometry.h>
 #include <rpos/features/location_provider/map.h>
@@ -47,9 +47,9 @@ namespace slamware_ros_sdk {
         const rpos::core::RectangleF& getValidMapArea() const { return validMapArea_; }
 
         // returns the cell index rect of actually filled cells
-        rpos::core::RectangleI fillRosMapMsg(const rpos::core::RectangleI& reqIdxRect, nav_msgs::GetMap::Response& msgMap) const;
-        rpos::core::RectangleI fillRosMapMsg(const rpos::core::RectangleF& reqArea, nav_msgs::GetMap::Response& msgMap) const;
-        rpos::core::RectangleI fillRosMapMsg(nav_msgs::GetMap::Response& msgMap) const;
+        rpos::core::RectangleI fillRosMapMsg(const rpos::core::RectangleI& reqIdxRect, nav_msgs::srv::GetMap::Response& msgMap) const;
+        rpos::core::RectangleI fillRosMapMsg(const rpos::core::RectangleF& reqArea, nav_msgs::srv::GetMap::Response& msgMap) const;
+        rpos::core::RectangleI fillRosMapMsg(nav_msgs::srv::GetMap::Response& msgMap) const;
 
     public:
         rpos::core::RectangleF calcAreaByCellIdxRect(const rpos::core::RectangleI& cellIdxRect) const { return sfCalcAreaByCellIdxRect(resolution_, cellIdxRect); }

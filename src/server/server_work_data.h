@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include "server_map_holder.h"
 #include "msg_convert.h"
@@ -19,7 +19,7 @@ namespace slamware_ros_sdk {
     	typedef std::map<int, sensor_info_t>                                    sensors_info_map_t;
     	typedef std::map<int, sensor_value_t>                                   sensors_values_map_t;
 
-        typedef slamware_ros_sdk::BasicSensorInfo                               ros_basic_sensor_info_t;
+        typedef BasicSensorInfo                               ros_basic_sensor_info_t;
         typedef std::map<int, ros_basic_sensor_info_t>                          ros_basic_sensor_info_map_t;
 
     public:

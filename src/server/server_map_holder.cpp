@@ -160,7 +160,7 @@ namespace slamware_ros_sdk {
         setMapData(mapPosition.x(), mapPosition.y(), mapResolution.x(), mapDimension.x(), mapDimension.y(), mapDat.data());
     }
 
-    rpos::core::RectangleI ServerMapHolder::fillRosMapMsg(const rpos::core::RectangleI& reqIdxRect, nav_msgs::GetMap::Response& msgMap) const
+    rpos::core::RectangleI ServerMapHolder::fillRosMapMsg(const rpos::core::RectangleI& reqIdxRect, nav_msgs::srv::GetMap::Response& msgMap) const
     {
         const auto resIdxRect = reqIdxRect;
         const auto resArea = calcAreaByCellIdxRect(resIdxRect);
@@ -223,7 +223,7 @@ namespace slamware_ros_sdk {
         return resIdxRect;
     }
 
-    rpos::core::RectangleI ServerMapHolder::fillRosMapMsg(const rpos::core::RectangleF& reqArea, nav_msgs::GetMap::Response& msgMap) const
+    rpos::core::RectangleI ServerMapHolder::fillRosMapMsg(const rpos::core::RectangleF& reqArea, nav_msgs::srv::GetMap::Response& msgMap) const
     {
         rpos::core::RectangleI reqIdxRect;
         if (!reqArea.empty())
@@ -231,7 +231,7 @@ namespace slamware_ros_sdk {
         return fillRosMapMsg(reqIdxRect, msgMap);
     }
 
-    rpos::core::RectangleI ServerMapHolder::fillRosMapMsg(nav_msgs::GetMap::Response& msgMap) const
+    rpos::core::RectangleI ServerMapHolder::fillRosMapMsg(nav_msgs::srv::GetMap::Response& msgMap) const
     {
         return fillRosMapMsg(validCellIdxRect_, msgMap);
     }

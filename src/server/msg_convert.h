@@ -1,37 +1,70 @@
 
 #pragma once
 
-#include <ros/ros.h>
-#include <tf/message_filter.h>
+#include <rclcpp/rclcpp.hpp>
+//#include <message_filters.h>
 
 #include <slamware_ros_sdk/utils.h>
 
-#include <slamware_ros_sdk/Vec2DInt32.h>
-#include <slamware_ros_sdk/Line2DFlt32Array.h>
-#include <slamware_ros_sdk/RectInt32.h>
-#include <slamware_ros_sdk/RobotDeviceInfo.h>
-#include <slamware_ros_sdk/BasicSensorInfoArray.h>
-#include <slamware_ros_sdk/BasicSensorValueDataArray.h>
-#include <slamware_ros_sdk/RobotBasicState.h>
-#include <slamware_ros_sdk/SyncMapRequest.h>
-#include <slamware_ros_sdk/MoveByDirectionRequest.h>
-#include <slamware_ros_sdk/MoveByThetaRequest.h>
-#include <slamware_ros_sdk/MoveToRequest.h>
-#include <slamware_ros_sdk/MoveToLocationsRequest.h>
-#include <slamware_ros_sdk/RotateToRequest.h>
-#include <slamware_ros_sdk/RotateRequest.h>
-#include <slamware_ros_sdk/RecoverLocalizationRequest.h>
-#include <slamware_ros_sdk/ClearMapRequest.h>
-#include <slamware_ros_sdk/SetMapUpdateRequest.h>
-#include <slamware_ros_sdk/SetMapLocalizationRequest.h>
-#include <slamware_ros_sdk/GoHomeRequest.h>
-#include <slamware_ros_sdk/CancelActionRequest.h>
-#include <slamware_ros_sdk/AddLineRequest.h>
-#include <slamware_ros_sdk/AddLinesRequest.h>
-#include <slamware_ros_sdk/RemoveLineRequest.h>
-#include <slamware_ros_sdk/ClearLinesRequest.h>
-#include <slamware_ros_sdk/MoveLineRequest.h>
-#include <slamware_ros_sdk/MoveLinesRequest.h>
+//#include <slamware_ros_sdk_msgs/Vec2DInt32.hpp>
+//#include <slamware_ros_sdk/Line2DFlt32Array.h>
+//#include <slamware_ros_sdk/RectInt32.h>
+//#include <slamware_ros_sdk/RobotDeviceInfo.h>
+//#include <slamware_ros_sdk/BasicSensorInfoArray.h>
+//#include <slamware_ros_sdk/BasicSensorValueDataArray.h>
+//#include <slamware_ros_sdk/RobotBasicState.h>
+//#include <slamware_ros_sdk/SyncMapRequest.h>
+//#include <slamware_ros_sdk/MoveByDirectionRequest.h>
+//#include <slamware_ros_sdk/MoveByThetaRequest.h>
+//#include <slamware_ros_sdk/MoveToRequest.h>
+//#include <slamware_ros_sdk/MoveToLocationsRequest.h>
+//#include <slamware_ros_sdk/RotateToRequest.h>
+//#include <slamware_ros_sdk/RotateRequest.h>
+//#include <slamware_ros_sdk/RecoverLocalizationRequest.h>
+//#include <slamware_ros_sdk/ClearMapRequest.h>
+//#include <slamware_ros_sdk/SetMapUpdateRequest.h>
+//#include <slamware_ros_sdk/SetMapLocalizationRequest.h>
+//#include <slamware_ros_sdk/GoHomeRequest.h>
+//#include <slamware_ros_sdk/CancelActionRequest.h>
+//#include <slamware_ros_sdk/AddLineRequest.h>
+//#include <slamware_ros_sdk/AddLinesRequest.h>
+//#include <slamware_ros_sdk/RemoveLineRequest.h>
+//#include <slamware_ros_sdk/ClearLinesRequest.h>
+//#include <slamware_ros_sdk/MoveLineRequest.h>
+//#include <slamware_ros_sdk/MoveLinesRequest.h>
+
+#include <slamware_ros_msgs/msg/vec2_d_int32.hpp>
+#include <slamware_ros_msgs/msg/line2_d_flt32_array.hpp>
+#include <slamware_ros_msgs/msg/rect_int32.hpp>
+#include <slamware_ros_msgs/msg/robot_device_info.hpp>
+#include <slamware_ros_msgs/msg/basic_sensor_info_array.hpp>
+#include <slamware_ros_msgs/msg/basic_sensor_value_data_array.hpp>
+#include <slamware_ros_msgs/msg/robot_basic_state.hpp>
+#include <slamware_ros_msgs/msg/sync_map_request.hpp>
+#include <slamware_ros_msgs/msg/move_by_direction_request.hpp>
+#include <slamware_ros_msgs/msg/move_by_theta_request.hpp>
+#include <slamware_ros_msgs/msg/move_to_request.hpp>
+#include <slamware_ros_msgs/msg/move_to_locations_request.hpp>
+#include <slamware_ros_msgs/msg/rotate_to_request.hpp>
+#include <slamware_ros_msgs/msg/rotate_request.hpp>
+#include <slamware_ros_msgs/msg/recover_localization_request.hpp>
+#include <slamware_ros_msgs/msg/clear_map_request.hpp>
+#include <slamware_ros_msgs/msg/set_map_update_request.hpp>
+#include <slamware_ros_msgs/msg/set_map_localization_request.hpp>
+#include <slamware_ros_msgs/msg/go_home_request.hpp>
+#include <slamware_ros_msgs/msg/cancel_action_request.hpp>
+#include <slamware_ros_msgs/msg/add_line_request.hpp>
+#include <slamware_ros_msgs/msg/add_lines_request.hpp>
+#include <slamware_ros_msgs/msg/remove_line_request.hpp>
+#include <slamware_ros_msgs/msg/clear_lines_request.hpp>
+#include <slamware_ros_msgs/msg/move_line_request.hpp>
+#include <slamware_ros_msgs/msg/move_lines_request.hpp>
+
+#include <slamware_ros_msgs/srv/sync_get_stcm.hpp>
+#include <slamware_ros_msgs/srv/sync_set_stcm.hpp>
+
+#include <slamware_ros_msgs/srv/sync_get_stcm.hpp>
+#include <slamware_ros_msgs/srv/sync_set_stcm.hpp>
 
 #include <rpos/core/geometry.h>
 #include <rpos/features/artifact_provider.h>
@@ -42,6 +75,10 @@
 
 #include <vector>
 #include <map>
+
+#include "tf2/transform_datatypes.h"
+
+using namespace slamware_ros_msgs::msg;
 
 namespace slamware_ros_sdk {
 
@@ -189,10 +226,10 @@ namespace slamware_ros_sdk {
     };
 
     template<>
-    struct MsgConvert<geometry_msgs::Point, rpos::core::Location>
+    struct MsgConvert<geometry_msgs::msg::Point, rpos::core::Location>
     {
     public:
-        typedef geometry_msgs::Point                ros_msg_t;
+        typedef geometry_msgs::msg::Point                ros_msg_t;
         typedef rpos::core::Location                sltc_val_t;
     public:
         static void toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg);
@@ -200,10 +237,10 @@ namespace slamware_ros_sdk {
     };
 
     template<>
-    struct MsgConvert<geometry_msgs::Quaternion, rpos::core::Rotation>
+    struct MsgConvert<geometry_msgs::msg::Quaternion, rpos::core::Rotation>
     {
     public:
-        typedef geometry_msgs::Quaternion           ros_msg_t;
+        typedef geometry_msgs::msg::Quaternion           ros_msg_t;
         typedef rpos::core::Rotation                sltc_val_t;
     public:
         static void toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg);
@@ -211,10 +248,10 @@ namespace slamware_ros_sdk {
     };
 
     template<>
-    struct MsgConvert<geometry_msgs::Pose, rpos::core::Pose>
+    struct MsgConvert<geometry_msgs::msg::Pose, rpos::core::Pose>
     {
     public:
-        typedef geometry_msgs::Pose                 ros_msg_t;
+        typedef geometry_msgs::msg::Pose                 ros_msg_t;
         typedef rpos::core::Pose                    sltc_val_t;
     public:
         static void toRos(const sltc_val_t& sltcVal, ros_msg_t& rosMsg);

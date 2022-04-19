@@ -4,7 +4,7 @@
 #include "server_params.h"
 #include "server_work_data.h"
 
-#include <tf/transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 #include <rpos/robot_platforms/slamware_core_platform.h>
 
@@ -45,9 +45,9 @@ namespace slamware_ros_sdk {
     protected:
         SlamwareRosSdkServer* rosSdkServer() const { return rosSdkServer_; }
 
-        ros::NodeHandle& rosNodeHandle() const;
+        rclcpp::Node::SharedPtr rosNodeHandle() const;
         const ServerParams& serverParams() const;
-        tf::TransformBroadcaster& tfBroadcaster() const;
+        std::shared_ptr<tf2_ros::TransformBroadcaster> tfBroadcaster() const;
 
         ServerWorkData_ConstPtr workData() const;
         ServerWorkData_Ptr mutableWorkData();

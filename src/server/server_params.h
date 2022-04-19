@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include <ros/ros.h>
-
+#include <rclcpp/rclcpp.hpp>
 #include <slamware_ros_sdk/utils.h>
 
 #include <boost/shared_ptr.hpp>
@@ -54,7 +53,7 @@ namespace slamware_ros_sdk {
         ServerParams();
 
         void resetToDefault();
-        void setBy(const ros::NodeHandle& nhRos);
+        void setBy(const rclcpp::Node::SharedPtr nhRos);
     };
     
 }
