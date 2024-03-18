@@ -1,4 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
+
+# uncomment this to see full compile line and args for debugging build
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# The slamware_ros_sdk v2.8.3 with gcc7 support is the last one released
+# gcc 7 without a lot of work. You can install gcc 7 along side of your newer compiler.
+# specify the C compiler
+set(CMAKE_C_COMPILER "/usr/bin/gcc-7")
+
+# specify the C++ compiler
+set(CMAKE_CXX_COMPILER "/usr/bin/g++-7")
+
 project(slamware_ros_sdk)
 
 if (NOT CMAKE_CXX_STANDARD)
@@ -9,8 +21,8 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
 
-find_path(slamware_sdk_INCLUDE_DIR rpos/rpos.h $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc5.4/slamware_sdk/include)
-find_path(slamware_sdk_LIBRARY librpos_framework.a $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc5.4/slamware_sdk/lib/linux-x86_64-gcc5.4)
+find_path(slamware_sdk_INCLUDE_DIR rpos/rpos.h $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc7/src/slamware_sdk/include)
+find_path(slamware_sdk_LIBRARY librpos_framework.a $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc7/src/slamware_sdk/lib/linux-x86_64)
 if(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
   set(SLTC_SDK_INC_DIR "${slamware_sdk_INCLUDE_DIR}")
   set(SLTC_SDK_LIB_DIR "${slamware_sdk_LIBRARY}")
@@ -28,6 +40,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=gnu++11")
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -37,6 +50,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(tf2_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 #find_package(visualization_msgs REQUIRED)
 
 #find_package(ament_cmake REQUIRED COMPONENTS
@@ -146,6 +160,8 @@ set(DEPENDENCIES
         "nav_msgs"
         "rclcpp"
         "sensor_msgs"
+        "std_srvs"
+        "tf2_geometry_msgs"
         "tf2_msgs"
         "tf2"
         "std_msgs"
@@ -196,6 +212,7 @@ target_link_libraries(slamware_ros_sdk_server_node
         ${SLTC_SDK_LIB_DIR}/libboost_system.a
         ${SLTC_SDK_LIB_DIR}/libboost_thread.a
         ${SLTC_SDK_LIB_DIR}/libboost_random.a
+        ${SLTC_SDK_LIB_DIR}/libboost_zlib.a
         pthread
         dl
         rt
@@ -287,13 +304,19 @@ ament_export_dependencies(tf2)
 ament_export_dependencies(message_filters)
 
 
+set(TARGETS_TO_INSTALL
+        slamware_ros_sdk_server_node
+        minimal_slamware_ros_sdk_server_node
+        ${PROJECT_NAME}
+)
+
 install(DIRECTORY
         launch
         DESTINATION share/${PROJECT_NAME}
         )
 
 install(
-        TARGETS ${PROJECT_NAME}
+        TARGETS ${TARGETS_TO_INSTALL}
         DESTINATION lib/${PROJECT_NAME}
 )
 

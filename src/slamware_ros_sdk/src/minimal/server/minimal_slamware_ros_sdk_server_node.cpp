@@ -26,7 +26,7 @@ public:
     Subclass(/* args */)
     {
         i = -99;
-        name = 'initial';
+        name = "initial";
     };
 
     ~Subclass()

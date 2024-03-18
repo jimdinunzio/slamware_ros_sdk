@@ -476,6 +476,15 @@ namespace slamware_ros_sdk {
         //
     }
 
+    static std::string sanitize_frame_id(const std::string& frame_id)
+    {
+        if (frame_id.size() > 0 && frame_id[0] == '/')
+        {
+            return frame_id.substr(1);
+        }
+        return frame_id;
+    }
+
     void ServerLaserScanWorker::doPerform(slamware_platform_t& pltfm)
     {
         const auto& srvParams = serverParams();
@@ -501,9 +510,10 @@ namespace slamware_ros_sdk {
         //    , laserPose.x(), laserPose.y(), laserPose.yaw()
         //    );
 
+        std::string sanitized_laser_frame = sanitize_frame_id(srvParams.laser_frame);
         sensor_msgs::msg::LaserScan msgScan;
         msgScan.header.stamp = startScanTime;
-        msgScan.header.frame_id = srvParams.laser_frame;
+        msgScan.header.frame_id = sanitized_laser_frame;
         fillRangeMinMaxInMsg_(points, msgScan);
 
         if (srvParams.angle_compensate)
@@ -538,7 +548,7 @@ namespace slamware_ros_sdk {
             geometry_msgs::msg::TransformStamped transformStamped;
             transformStamped.header.stamp = rclcpp::Time();
             transformStamped.header.frame_id = srvParams.map_frame;
-            transformStamped.child_frame_id = srvParams.laser_frame;
+            transformStamped.child_frame_id = sanitized_laser_frame;
             transformStamped.transform.translation.x = laserPose.x();
             transformStamped.transform.translation.y = laserPose.y();
             transformStamped.transform.translation.z = 0.0;

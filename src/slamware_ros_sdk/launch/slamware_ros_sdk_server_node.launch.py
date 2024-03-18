@@ -9,7 +9,7 @@ def generate_launch_description():
     ld = launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(
             name='ip_address',
-            default_value='192.168.1.37'
+            default_value='192.168.11.1'
         ),
         launch.actions.DeclareLaunchArgument(
             name='move_base_goal_topic',

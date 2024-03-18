@@ -1,5 +1,5 @@
 <launch>
-  <arg name="ip_address" default="192.168.1.37" />
+  <arg name="ip_address" default="192.168.11.1" />
   <arg name="move_base_goal_topic" default="/move_base_simple/goal"/>
 
   <node name="slamware_ros_sdk_server_node" pkg="slamware_ros_sdk" type="slamware_ros_sdk_server_node" output="screen">

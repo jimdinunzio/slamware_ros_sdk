@@ -19,7 +19,7 @@ def generate_launch_description():
     executable="slamware_ros_sdk_server_node",
     output='screen',
     parameters=[
-      {"ip_address": "192.168.1.37"},
+      {"ip_address": "192.168.11.1"},
       {"angle_compensate": "true"},
       {"fixed_odom_map_tf": "true"}
     ]
