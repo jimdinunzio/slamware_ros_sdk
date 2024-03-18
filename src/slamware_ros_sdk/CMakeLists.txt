@@ -6,10 +6,10 @@ cmake_minimum_required(VERSION 3.5)
 # The slamware_ros_sdk v2.8.3 with gcc7 support is the last one released
 # gcc 7 without a lot of work. You can install gcc 7 along side of your newer compiler.
 # specify the C compiler
-set(CMAKE_C_COMPILER "/usr/bin/gcc-7")
+set(CMAKE_C_COMPILER "/usr/bin/aarch64-linux-gnu-gcc-9")
 
 # specify the C++ compiler
-set(CMAKE_CXX_COMPILER "/usr/bin/g++-7")
+set(CMAKE_CXX_COMPILER "/usr/bin/aarch64-linux-gnu-g++-9")
 
 project(slamware_ros_sdk)
 
@@ -21,8 +21,8 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
 
-find_path(slamware_sdk_INCLUDE_DIR rpos/rpos.h $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc7/src/slamware_sdk/include)
-find_path(slamware_sdk_LIBRARY librpos_framework.a $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc7/src/slamware_sdk/lib/linux-x86_64)
+find_path(slamware_sdk_INCLUDE_DIR rpos/rpos.h $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-aarch64-gcc7/src/slamware_sdk/include)
+find_path(slamware_sdk_LIBRARY librpos_framework.a $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-aarch64-gcc7/src/slamware_sdk/lib/linux-aarch64)
 if(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
   set(SLTC_SDK_INC_DIR "${slamware_sdk_INCLUDE_DIR}")
   set(SLTC_SDK_LIB_DIR "${slamware_sdk_LIBRARY}")
@@ -30,7 +30,7 @@ else(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
   if(NOT DEFINED SLTC_SDK_ROOT OR SLTC_SDK_ROOT STREQUAL "")
     set(SLTC_SDK_ROOT "$ENV{HOME}/robotics/slamtec/slamware_sdk")
   endif()
-  set(SLTC_SDK_DIR "${SLTC_SDK_ROOT}/linux-x86_64-release")
+  set(SLTC_SDK_DIR "${SLTC_SDK_ROOT}/linux-aarch64-release")
   set(SLTC_SDK_INC_DIR "${SLTC_SDK_DIR}/include")
   set(SLTC_SDK_LIB_DIR "${SLTC_SDK_DIR}/lib")
 endif(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
