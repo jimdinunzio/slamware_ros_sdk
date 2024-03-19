@@ -6,10 +6,10 @@ cmake_minimum_required(VERSION 3.5)
 # The slamware_ros_sdk v2.8.3 with gcc7 support is the last one released
 # gcc 7 without a lot of work. You can install gcc 7 along side of your newer compiler.
 # specify the C compiler
-set(CMAKE_C_COMPILER "/usr/bin/aarch64-linux-gnu-gcc-9")
+set(CMAKE_C_COMPILER "/usr/bin/gcc-9")
 
 # specify the C++ compiler
-set(CMAKE_CXX_COMPILER "/usr/bin/aarch64-linux-gnu-g++-9")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++-9")
 
 project(slamware_ros_sdk)
 
@@ -36,6 +36,13 @@ else(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
 endif(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=gnu++11")
+
+set(ENV{PKG_CONFIG_PATH} "/usr/lib/aarch64-linux-gnu/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+
+find_library(CARES_LIBRARY NAMES cares)
+if(NOT CARES_LIBRARY)
+    message(FATAL_ERROR "CARES library not found")
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -216,6 +223,7 @@ target_link_libraries(slamware_ros_sdk_server_node
         pthread
         dl
         rt
+        ${CARES_LIBRARY}
         )
 
 
