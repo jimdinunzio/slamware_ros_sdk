@@ -4,12 +4,12 @@ cmake_minimum_required(VERSION 3.5)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # The slamware_ros_sdk v2.8.3 with gcc7 support is the last one released
-# gcc 7 without a lot of work. You can install gcc 7 along side of your newer compiler.
+# It builds with gcc 9. You can install gcc 9 along side of your newer compiler.
 # specify the C compiler
-set(CMAKE_C_COMPILER "/usr/bin/gcc-7")
+set(CMAKE_C_COMPILER "/usr/bin/gcc-9")
 
 # specify the C++ compiler
-set(CMAKE_CXX_COMPILER "/usr/bin/g++-7")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++-9")
 
 project(slamware_ros_sdk)
 
