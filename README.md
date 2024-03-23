@@ -4,21 +4,19 @@
 * SLAMWARE ROS SDK 2.8.3-rtm
 * Firmware release-2.7-sdp-E1M1-20200622, sdp_version: 2.7.0-dev (Jun 17 2020)
 
-Ported to ROS2 Humble on Ubuntu 22.04 and tested with the now retired SLAMTEC Mapper M1M1 hardware.
+Ported to ROS2 Humble on Ubuntu 22.04 x86_64 and tested with the now retired SLAMTEC Mapper M1M1 hardware.
 
-## Build Requirements
-GCC 7
+## Build Environment
+- On x86_64 use GCC 9
+- On aarch64 (e.g. Raspberry PI) use GCC 9
 
-## Build Steps
-1. temporarily add this to your /etc/apt/sources.list
+### Build Steps
+1. GCC 9 can be installed with 
 ```
-   # for gcc 
-   deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal main universe`
+   sudo apt install g++-9
 ```
-2. Run update
+4. Install other dependencies [aarch64]
 
-`sudo apt update`
+`sudo apt install ros-humble-example-interfaces libc-ares-dev`
 
-3. Install g++-7
-
-`sudo apt install g++-7`
+5. colcon build
