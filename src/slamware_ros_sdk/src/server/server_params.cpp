@@ -17,6 +17,46 @@ namespace slamware_ros_sdk {
         resetToDefault();
     }
 
+    void ServerParams::declareParams(const rclcpp::Node::SharedPtr nhRos)
+    {
+        nhRos->declare_parameter("ip_address", rclcpp::ParameterValue(ip_address));
+        nhRos->declare_parameter("robot_port", rclcpp::ParameterValue(robot_port));
+        nhRos->declare_parameter("reconn_wait_ms", rclcpp::ParameterValue(reconn_wait_ms));
+
+        nhRos->declare_parameter("angle_compensate", rclcpp::ParameterValue(angle_compensate));
+        nhRos->declare_parameter("fixed_odom_map_tf", rclcpp::ParameterValue(fixed_odom_map_tf));
+
+        nhRos->declare_parameter("robot_frame", rclcpp::ParameterValue(robot_frame));
+        nhRos->declare_parameter("laser_frame", rclcpp::ParameterValue(laser_frame));
+        nhRos->declare_parameter("map_frame", rclcpp::ParameterValue(map_frame));
+        nhRos->declare_parameter("odom_frame", rclcpp::ParameterValue(odom_frame));
+
+        nhRos->declare_parameter("robot_pose_pub_period", rclcpp::ParameterValue(robot_pose_pub_period));
+        nhRos->declare_parameter("scan_pub_period", rclcpp::ParameterValue(scan_pub_period));
+        nhRos->declare_parameter("map_update_period", rclcpp::ParameterValue(map_update_period));
+        nhRos->declare_parameter("map_pub_period", rclcpp::ParameterValue(map_pub_period));
+        nhRos->declare_parameter("basic_sensors_info_update_period", rclcpp::ParameterValue(basic_sensors_info_update_period));
+        nhRos->declare_parameter("basic_sensors_values_pub_period", rclcpp::ParameterValue(basic_sensors_values_pub_period));
+        nhRos->declare_parameter("path_pub_period", rclcpp::ParameterValue(path_pub_period));
+        nhRos->declare_parameter("robot_basic_state_pub_period", rclcpp::ParameterValue(robot_basic_state_pub_period));
+        nhRos->declare_parameter("virtual_walls_pub_period", rclcpp::ParameterValue(virtual_walls_pub_period));
+        nhRos->declare_parameter("virtual_tracks_pub_period", rclcpp::ParameterValue(virtual_tracks_pub_period));
+
+        nhRos->declare_parameter("map_sync_once_get_max_wh", rclcpp::ParameterValue(map_sync_once_get_max_wh));
+        nhRos->declare_parameter("map_update_near_robot_half_wh", rclcpp::ParameterValue(map_update_near_robot_half_wh));
+
+        nhRos->declare_parameter("scan_topic", rclcpp::ParameterValue(scan_topic));
+        nhRos->declare_parameter("odom_topic", rclcpp::ParameterValue(odom_topic));
+        nhRos->declare_parameter("map_topic", rclcpp::ParameterValue(map_topic));
+        nhRos->declare_parameter("map_info_topic", rclcpp::ParameterValue(map_info_topic));
+        nhRos->declare_parameter("basic_sensors_info_topic", rclcpp::ParameterValue(basic_sensors_info_topic));
+        nhRos->declare_parameter("basic_sensors_values_topic", rclcpp::ParameterValue(basic_sensors_values_topic));
+        nhRos->declare_parameter("path_topic", rclcpp::ParameterValue(path_topic));
+
+        nhRos->declare_parameter("vel_control_topic", rclcpp::ParameterValue(vel_control_topic));
+        nhRos->declare_parameter("goal_topic", rclcpp::ParameterValue(goal_topic));
+    }
+
     void ServerParams::resetToDefault()
     {
         ip_address = "192.168.11.1";

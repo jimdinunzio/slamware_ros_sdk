@@ -88,7 +88,7 @@ namespace slamware_ros_sdk {
 //    geometry_msgs::msg::TransformStamped constuct_transform(rpos::core::Pose p)
 //    {
 //        geometry_msgs::msg::TransformStamped transformStamped;
-//        transformStamped.header.stamp = rclcpp::Time();
+//        transformStamped.header.stamp = rosNodeHandle()->now();
 //        transformStamped.header.frame_id = map_frame;
 //        transformStamped.child_frame_id = odom_frame;
 //        transformStamped.transform.translation.x = p.x();
@@ -115,7 +115,7 @@ namespace slamware_ros_sdk {
 //            tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 ////
 //            geometry_msgs::msg::TransformStamped transformStamped;
-//            transformStamped.header.stamp = rclcpp::Time();
+//            transformStamped.header.stamp = rosNodeHandle()->now();
 //            transformStamped.header.frame_id = "odom";
 //            transformStamped.child_frame_id = "base_link";
 //            transformStamped.transform.translation.z = 0.0;
@@ -132,7 +132,7 @@ namespace slamware_ros_sdk {
             tfIdenty.setRotation(tf2::Quaternion(0, 0, 0, 1));
 
             geometry_msgs::msg::TransformStamped transformStamped;
-            transformStamped.header.stamp = rclcpp::Time();
+            transformStamped.header.stamp = rosNodeHandle()->now();
             transformStamped.header.frame_id = srvParams.map_frame;
             transformStamped.child_frame_id = srvParams.odom_frame;
             transformStamped.transform.translation.x = 0.0;
@@ -158,7 +158,7 @@ namespace slamware_ros_sdk {
 
         // publish odom transform
         geometry_msgs::msg::TransformStamped transformStamped;
-        transformStamped.header.stamp = rclcpp::Time();
+        transformStamped.header.stamp = rosNodeHandle()->now();
         transformStamped.header.frame_id = srvParams.odom_frame;
         transformStamped.child_frame_id = srvParams.robot_frame;
         transformStamped.transform.translation.x = robotPose.x();
@@ -185,7 +185,7 @@ namespace slamware_ros_sdk {
         // send TF transform
         nav_msgs::msg::Odometry msgRobotPose;
         msgRobotPose.header.frame_id = srvParams.odom_frame;
-        msgRobotPose.header.stamp = rclcpp::Time();
+        msgRobotPose.header.stamp = rosNodeHandle()->now();
         sltcToRosMsg(robotPose, msgRobotPose.pose.pose);
         pubRobotPose_->publish(msgRobotPose);
     }
@@ -425,8 +425,13 @@ namespace slamware_ros_sdk {
     {
         const auto& srvParams = serverParams();
         rclcpp::Node::SharedPtr nhRos = rosNodeHandle();
-        pubMapDat_ = nhRos->create_publisher<nav_msgs::msg::OccupancyGrid>(srvParams.map_topic, 1);
-        pubMapInfo_ = nhRos->create_publisher<nav_msgs::msg::MapMetaData>(srvParams.map_info_topic, 1);
+
+        auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
+        qos.reliability(rclcpp::ReliabilityPolicy::Reliable);
+        qos.durability(rclcpp::DurabilityPolicy::TransientLocal);
+        qos.history(rclcpp::HistoryPolicy::KeepLast);
+        pubMapDat_ = nhRos->create_publisher<nav_msgs::msg::OccupancyGrid>(srvParams.map_topic, qos);
+        pubMapInfo_ = nhRos->create_publisher<nav_msgs::msg::MapMetaData>(srvParams.map_info_topic, qos);
     }
 
     ServerExploreMapPublishWorker::~ServerExploreMapPublishWorker()
@@ -449,7 +454,7 @@ namespace slamware_ros_sdk {
         wkDat->exploreMapHolder.fillRosMapMsg(msgMap);
 
         // Set the header information on the map
-        msgMap.map.header.stamp = rclcpp::Time();
+        msgMap.map.header.stamp = rosNodeHandle()->now();
         msgMap.map.header.frame_id = srvParams.map_frame;
 
         pubMapDat_->publish(msgMap.map);
@@ -491,9 +496,10 @@ namespace slamware_ros_sdk {
         auto tfBrdcst = tfBroadcaster();
         auto wkDat = workData();
 
-        rclcpp::Time startScanTime = rclcpp::Time();
+
+        rclcpp::Time startScanTime = rosNodeHandle()->now();
         rpos::features::system_resource::LaserScan tLs = pltfm.getLaserScan();
-        rclcpp::Time endScanTime = rclcpp::Time();
+        rclcpp::Time endScanTime = rosNodeHandle()->now();
         double dblScanDur = (endScanTime - startScanTime).seconds();
 
         const auto& points = tLs.getLaserPoints();
@@ -546,7 +552,7 @@ namespace slamware_ros_sdk {
 
         {
             geometry_msgs::msg::TransformStamped transformStamped;
-            transformStamped.header.stamp = rclcpp::Time();
+            transformStamped.header.stamp = rosNodeHandle()->now();
             transformStamped.header.frame_id = srvParams.map_frame;
             transformStamped.child_frame_id = sanitized_laser_frame;
             transformStamped.transform.translation.x = laserPose.x();
@@ -914,26 +920,26 @@ namespace slamware_ros_sdk {
         rpos::actions::MoveAction actMove = pltfm.getCurrentAction();
         if (!actMove)
         {
-            msgPath.header.stamp = rclcpp::Time();
+            msgPath.header.stamp = rosNodeHandle()->now();
             pubPlanPath_->publish(msgPath);
             return;
         }
         rpos::features::motion_planner::Path remPath = actMove.getRemainingPath();
         if (!remPath)
         {
-            msgPath.header.stamp = rclcpp::Time();
+            msgPath.header.stamp = rosNodeHandle()->now();
             pubPlanPath_->publish(msgPath);
             return;
         }
 
         const auto& remPathPoints = remPath.getPoints();
         msgPath.poses.resize(remPathPoints.size());
-        msgPath.header.stamp = rclcpp::Time();
+        msgPath.header.stamp = rosNodeHandle()->now();
         for (size_t i = 0; i < remPathPoints.size(); ++i)
         {
             geometry_msgs::msg::PoseStamped tPoseStamp;
             tPoseStamp.header.frame_id = srvParams.map_frame;
-            tPoseStamp.header.stamp = rclcpp::Time();
+            tPoseStamp.header.stamp = rosNodeHandle()->now();
             sltcToRosMsg(remPathPoints[i], tPoseStamp.pose.position);
             tPoseStamp.pose.orientation.x = 0;
             tPoseStamp.pose.orientation.y = 0;
