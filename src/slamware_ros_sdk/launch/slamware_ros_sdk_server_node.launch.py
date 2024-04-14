@@ -12,7 +12,7 @@ def generate_launch_description():
             default_value='192.168.11.1'
         ),
         launch.actions.DeclareLaunchArgument(
-            name='move_base_goal_topic',
+            name='goal_topic',
             default_value='/move_base_simple/goal'
         ),
         launch_ros.actions.Node(
