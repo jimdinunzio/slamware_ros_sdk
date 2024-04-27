@@ -107,6 +107,7 @@ namespace slamware_ros_sdk {
         auto tfBrdcst = tfBroadcaster();
         auto wkDat = mutableWorkData();
 
+        auto now = rosNodeHandle()->now();
         // send TF transform
         if (srvParams.fixed_odom_map_tf) // only for debug rosrun
         {
@@ -132,7 +133,7 @@ namespace slamware_ros_sdk {
             tfIdenty.setRotation(tf2::Quaternion(0, 0, 0, 1));
 
             geometry_msgs::msg::TransformStamped transformStamped;
-            transformStamped.header.stamp = rosNodeHandle()->now();
+            transformStamped.header.stamp = now;
             transformStamped.header.frame_id = srvParams.map_frame;
             transformStamped.child_frame_id = srvParams.odom_frame;
             transformStamped.transform.translation.x = 0.0;
@@ -158,7 +159,7 @@ namespace slamware_ros_sdk {
 
         // publish odom transform
         geometry_msgs::msg::TransformStamped transformStamped;
-        transformStamped.header.stamp = rosNodeHandle()->now();
+        transformStamped.header.stamp = now;
         transformStamped.header.frame_id = srvParams.odom_frame;
         transformStamped.child_frame_id = srvParams.robot_frame;
         transformStamped.transform.translation.x = robotPose.x();
@@ -185,7 +186,7 @@ namespace slamware_ros_sdk {
         // send TF transform
         nav_msgs::msg::Odometry msgRobotPose;
         msgRobotPose.header.frame_id = srvParams.odom_frame;
-        msgRobotPose.header.stamp = rosNodeHandle()->now();
+        msgRobotPose.header.stamp = now;
         sltcToRosMsg(robotPose, msgRobotPose.pose.pose);
         pubRobotPose_->publish(msgRobotPose);
     }
@@ -518,7 +519,7 @@ namespace slamware_ros_sdk {
 
         std::string sanitized_laser_frame = sanitize_frame_id(srvParams.laser_frame);
         sensor_msgs::msg::LaserScan msgScan;
-        msgScan.header.stamp = startScanTime;
+        msgScan.header.stamp = endScanTime;
         msgScan.header.frame_id = sanitized_laser_frame;
         fillRangeMinMaxInMsg_(points, msgScan);
 

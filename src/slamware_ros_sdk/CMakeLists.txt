@@ -243,6 +243,7 @@ target_link_libraries(minimal_slamware_ros_sdk_server_node
         pthread
 
         )
+
 #==================================
 #catkin_package(
 #  INCLUDE_DIRS include
@@ -332,6 +333,13 @@ install(
         DIRECTORY launch rviz
         DESTINATION share/${PROJECT_NAME}
 )
+
+# add src/util/set_map.py and src/util/get_map.py to the install
+install(PROGRAMS
+        scripts/set_map.py
+        scripts/get_map.py
+        DESTINATION lib/${PROJECT_NAME}
+        )
 
 #install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_server_node
 #  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

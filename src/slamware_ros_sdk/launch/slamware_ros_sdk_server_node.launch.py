@@ -29,16 +29,16 @@ def generate_launch_description():
                     'angle_compensate': True,
                     'fixed_odom_map_tf': True,
 
-                    'robot_frame': '/base_link',
-                    'laser_frame': '/laser',
-                    'map_frame': '/map',
-                    'odom_frame': '/odom',
+                    'robot_frame': 'base_link',
+                    'laser_frame': 'laser',
+                    'map_frame': 'map',
+                    'odom_frame': 'odom',
                     
-                    'robot_pose_pub_period': 0.05,
-                    'scan_pub_period': 0.1,
+                    'robot_pose_pub_period': 0.1,
+                    'scan_pub_period': 0.2,
                     'map_update_period': 0.2,
                     'map_pub_period': 0.2,
-                    'path_pub_period': 0.05,
+                    'path_pub_period': 0.0,
 
                     'scan_topic': 'scan',
                     'odom_topic': 'odom/unfiltered',
