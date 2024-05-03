@@ -10,7 +10,9 @@ def set_map():
         return
 
     base_filename = sys.argv[1]
-    stcm_filename = base_filename + ".stcm"
+    stcm_filename = base_filename
+    if not stcm_filename.endswith('.stcm'):
+        stcm_filename += '.stcm'
 
     if not os.path.exists(stcm_filename):
         print(f"File {stcm_filename} does not exist.")
