@@ -27,7 +27,7 @@ def generate_launch_description():
                     'reconn_wait_ms': 3000,
 
                     'angle_compensate': True,
-                    'fixed_odom_map_tf': True,
+                    'fixed_odom_map_tf': False,
 
                     'robot_frame': 'base_link',
                     'laser_frame': 'laser',
@@ -56,16 +56,16 @@ def generate_launch_description():
             executable='static_transform_publisher',
             name='map2odom',
             arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
-                       '1.0', 'slamware_map', 'odom'],
+                       '1.0', 'map', 'odom'],
         ),
 
-        launch_ros.actions.Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='base2laser',
-            arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
-                       '1.0', 'base_link', 'laser'],
-        ),
+        # launch_ros.actions.Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='base2laser',
+        #     arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
+        #                '1.0', 'base_link', 'laser'],
+        # ),
 
     ])
     return ld

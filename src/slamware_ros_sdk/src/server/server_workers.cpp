@@ -158,24 +158,24 @@ namespace slamware_ros_sdk {
         wkDat->robotPose = robotPose;
 
         // publish odom transform
-        geometry_msgs::msg::TransformStamped transformStamped;
-        transformStamped.header.stamp = now;
-        transformStamped.header.frame_id = srvParams.odom_frame;
-        transformStamped.child_frame_id = srvParams.robot_frame;
-        transformStamped.transform.translation.x = robotPose.x();
-        transformStamped.transform.translation.y = robotPose.y();
-        transformStamped.transform.translation.z = robotPose.z();
+        // geometry_msgs::msg::TransformStamped transformStamped;
+        // transformStamped.header.stamp = now;
+        // transformStamped.header.frame_id = srvParams.odom_frame;
+        // transformStamped.child_frame_id = srvParams.robot_frame;
+        // transformStamped.transform.translation.x = robotPose.x();
+        // transformStamped.transform.translation.y = robotPose.y();
+        // transformStamped.transform.translation.z = robotPose.z();
 
-        tf2::Matrix3x3 obs_mat;
-        obs_mat.setEulerYPR(robotPose.yaw(),0.0,0.0);
+        // tf2::Matrix3x3 obs_mat;
+        // obs_mat.setEulerYPR(robotPose.yaw(),0.0,0.0);
 
-        tf2::Quaternion q_tf;
-        obs_mat.getRotation(q_tf);
-        transformStamped.transform.rotation.x = q_tf.getX();
-        transformStamped.transform.rotation.y = q_tf.getY();
-        transformStamped.transform.rotation.z = q_tf.getZ();
-        transformStamped.transform.rotation.w = q_tf.getW();
-        tfBrdcst->sendTransform(transformStamped);
+        // tf2::Quaternion q_tf;
+        // obs_mat.getRotation(q_tf);
+        // transformStamped.transform.rotation.x = q_tf.getX();
+        // transformStamped.transform.rotation.y = q_tf.getY();
+        // transformStamped.transform.rotation.z = q_tf.getZ();
+        // transformStamped.transform.rotation.w = q_tf.getW();
+        // tfBrdcst->sendTransform(transformStamped);
 
 //        tf2::Transform transform;
 //        transform.setOrigin(tf2::Vector3(robotPose.x(), robotPose.y(), 0.0));
@@ -552,24 +552,24 @@ namespace slamware_ros_sdk {
         msgScan.time_increment = dblScanDur / (double)(msgScan.ranges.size() - 1);
 
         {
-            geometry_msgs::msg::TransformStamped transformStamped;
-            transformStamped.header.stamp = rosNodeHandle()->now();
-            transformStamped.header.frame_id = srvParams.map_frame;
-            transformStamped.child_frame_id = sanitized_laser_frame;
-            transformStamped.transform.translation.x = laserPose.x();
-            transformStamped.transform.translation.y = laserPose.y();
-            transformStamped.transform.translation.z = 0.0;
+            // geometry_msgs::msg::TransformStamped transformStamped;
+            // transformStamped.header.stamp = rosNodeHandle()->now();
+            // transformStamped.header.frame_id = srvParams.map_frame;
+            // transformStamped.child_frame_id = sanitized_laser_frame;
+            // transformStamped.transform.translation.x = laserPose.x();
+            // transformStamped.transform.translation.y = laserPose.y();
+            // transformStamped.transform.translation.z = 0.0;
 
-            tf2::Matrix3x3 obs_mat;
-            obs_mat.setEulerYPR(laserPose.yaw(),0.0,0.0);
+            // tf2::Matrix3x3 obs_mat;
+            // obs_mat.setEulerYPR(laserPose.yaw(),0.0,0.0);
 
-            tf2::Quaternion q_tf;
-            obs_mat.getRotation(q_tf);
-            transformStamped.transform.rotation.x = q_tf.getX();
-            transformStamped.transform.rotation.y = q_tf.getY();
-            transformStamped.transform.rotation.z = q_tf.getZ();
-            transformStamped.transform.rotation.w = q_tf.getW();
-            tfBrdcst->sendTransform(transformStamped);
+            // tf2::Quaternion q_tf;
+            // obs_mat.getRotation(q_tf);
+            // transformStamped.transform.rotation.x = q_tf.getX();
+            // transformStamped.transform.rotation.y = q_tf.getY();
+            // transformStamped.transform.rotation.z = q_tf.getZ();
+            // transformStamped.transform.rotation.w = q_tf.getW();
+            // tfBrdcst->sendTransform(transformStamped);
 
 //            tf::Transform laserTrans;
 //            laserTrans.setOrigin(tf::Vector3(laserPose.x(), laserPose.y(), 0.0));
