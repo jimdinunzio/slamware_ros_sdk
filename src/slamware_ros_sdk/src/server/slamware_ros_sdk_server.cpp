@@ -188,8 +188,9 @@ namespace slamware_ros_sdk
     bool SlamwareRosSdkServer::init_(std::string & /*errMsg*/)
     {
         params_.resetToDefault();
+        params_.declareParams(nh_);
         params_.setBy(nh_);
-
+        
         {
             boost::lock_guard<boost::mutex> lkGuard(workDatLock_);
             workDat_ = boost::make_shared<ServerWorkData>();
@@ -296,8 +297,8 @@ namespace slamware_ros_sdk
         // init all subscriptions
         {
 
-            subRobotControl_ = subscribe_T_<geometry_msgs::msg::Twist>(params_.vel_control_topic, 10U, &SlamwareRosSdkServer::msgCbRobotControl_);
-            subMoveToGoal_ = subscribe_T_<geometry_msgs::msg::PoseStamped>(params_.goal_topic, 1U, &SlamwareRosSdkServer::msgCbMoveToGoal_);
+            //subRobotControl_ = subscribe_T_<geometry_msgs::msg::Twist>(params_.vel_control_topic, 10U, &SlamwareRosSdkServer::msgCbRobotControl_);
+            //subMoveToGoal_ = subscribe_T_<geometry_msgs::msg::PoseStamped>(params_.goal_topic, 1U, &SlamwareRosSdkServer::msgCbMoveToGoal_);
             subSyncMap_ = subscribe_T_<SyncMapRequest>("sync_map", 1U, &SlamwareRosSdkServer::msgCbSyncMap_);
             subSetPose_ = subscribe_T_<geometry_msgs::msg::Pose>("set_pose", 1U, &SlamwareRosSdkServer::msgCbSetPose_);
             subRecoverLocalization_ = subscribe_T_<RecoverLocalizationRequest>("recover_localization", 1U,
@@ -307,21 +308,21 @@ namespace slamware_ros_sdk
                                                                  &SlamwareRosSdkServer::msgCbSetMapUpdate_);
             subSetMapLocalization_ = subscribe_T_<SetMapLocalizationRequest>("set_map_localization", 1U,
                                                                              &SlamwareRosSdkServer::msgCbSetMapLocalization_);
-            subMoveByDirection_ = subscribe_T_<MoveByDirectionRequest>("move_by_direction", 1U,
-                                                                       &SlamwareRosSdkServer::msgCbMoveByDirection_);
-            subMoveByTheta_ = subscribe_T_<MoveByThetaRequest>("move_by_theta" ,  1U, &SlamwareRosSdkServer::msgCbMoveByTheta_);
+            //subMoveByDirection_ = subscribe_T_<MoveByDirectionRequest>("move_by_direction", 1U,
+                                                                    //    &SlamwareRosSdkServer::msgCbMoveByDirection_);
+            //subMoveByTheta_ = subscribe_T_<MoveByThetaRequest>("move_by_theta" ,  1U, &SlamwareRosSdkServer::msgCbMoveByTheta_);
 
-            subMoveByTheta_ = subscribe_T_<MoveByThetaRequest>("move_by_theta", 1U,
-                                                               &SlamwareRosSdkServer::msgCbMoveByTheta_);
-            subMoveTo_ = subscribe_T_<MoveToRequest>("move_to", 1U, &SlamwareRosSdkServer::msgCbMoveTo_);
-            subMoveToLocations_ = subscribe_T_<MoveToLocationsRequest>("move_to_locations", 1U,
-                                                                       &SlamwareRosSdkServer::msgCbMoveToLocations_);
-            subRotateTo_ = subscribe_T_<RotateToRequest>("rotate_to", 1U, &SlamwareRosSdkServer::msgCbRotateTo_);
-            subRotate_ = subscribe_T_<RotateRequest>("rotate", 1U, &SlamwareRosSdkServer::msgCbRotate_);
+            //subMoveByTheta_ = subscribe_T_<MoveByThetaRequest>("move_by_theta", 1U,
+                                                            //    &SlamwareRosSdkServer::msgCbMoveByTheta_);
+            //subMoveTo_ = subscribe_T_<MoveToRequest>("move_to", 1U, &SlamwareRosSdkServer::msgCbMoveTo_);
+            //subMoveToLocations_ = subscribe_T_<MoveToLocationsRequest>("move_to_locations", 1U,
+                                                                    //    &SlamwareRosSdkServer::msgCbMoveToLocations_);
+            //subRotateTo_ = subscribe_T_<RotateToRequest>("rotate_to", 1U, &SlamwareRosSdkServer::msgCbRotateTo_);
+            //subRotate_ = subscribe_T_<RotateRequest>("rotate", 1U, &SlamwareRosSdkServer::msgCbRotate_);
 
-            subGoHome_ = subscribe_T_<GoHomeRequest>("go_home", 1U, &SlamwareRosSdkServer::msgCbGoHome_);
-            subCancelAction_ = subscribe_T_<CancelActionRequest>("cancel_action", 1U,
-                                                                 &SlamwareRosSdkServer::msgCbCancelAction_);
+            //subGoHome_ = subscribe_T_<GoHomeRequest>("go_home", 1U, &SlamwareRosSdkServer::msgCbGoHome_);
+            //subCancelAction_ = subscribe_T_<CancelActionRequest>("cancel_action", 1U,
+                                                                //  &SlamwareRosSdkServer::msgCbCancelAction_);
 
             subAddLine_ = subscribe_T_<AddLineRequest>("add_line", 1U, &SlamwareRosSdkServer::msgCbAddLine_);
             subAddLines_ = subscribe_T_<AddLinesRequest>("add_lines", 1U, &SlamwareRosSdkServer::msgCbAddLines_);
@@ -841,34 +842,34 @@ namespace slamware_ros_sdk
 //    }
 
 
-    void
-    SlamwareRosSdkServer::msgCbRobotControl_(slamware_platform_t &pltfm, const geometry_msgs::msg::Twist::ConstPtr &msg)
-    {
-        if (velocityControllAction_.isEmpty())
-        {
-            try
-            {
-                velocityControllAction_ = slamwarePltfm_.velocityControl();
-            }
-            catch (...)
-            {
-                RCLCPP_ERROR(rosNodeHandle_()->get_logger(), "Can not construct velocity controll action");
-                return;
-            }
-        }
+    // void
+    // SlamwareRosSdkServer::msgCbRobotControl_(slamware_platform_t &pltfm, const geometry_msgs::msg::Twist::ConstPtr &msg)
+    // {
+    //     if (velocityControllAction_.isEmpty())
+    //     {
+    //         try
+    //         {
+    //             velocityControllAction_ = slamwarePltfm_.velocityControl();
+    //         }
+    //         catch (...)
+    //         {
+    //             RCLCPP_ERROR(rosNodeHandle_()->get_logger(), "Can not construct velocity controll action");
+    //             return;
+    //         }
+    //     }
 
-        try
-        {
-            velocityControllAction_.setVelocity(msg->linear.x, msg->linear.y, msg->angular.z);
-        }
-        catch (...)
-        {
-            RCLCPP_ERROR(rosNodeHandle_()->get_logger(), "Reconstruct velocity controll action");
-            velocityControllAction_ = slamwarePltfm_.velocityControl();
-            velocityControllAction_.setVelocity(msg->linear.x, msg->linear.y, msg->angular.z);
-            throw;
-        }
-    }
+    //     try
+    //     {
+    //         velocityControllAction_.setVelocity(msg->linear.x, msg->linear.y, msg->angular.z);
+    //     }
+    //     catch (...)
+    //     {
+    //         RCLCPP_ERROR(rosNodeHandle_()->get_logger(), "Reconstruct velocity controll action");
+    //         velocityControllAction_ = slamwarePltfm_.velocityControl();
+    //         velocityControllAction_.setVelocity(msg->linear.x, msg->linear.y, msg->angular.z);
+    //         throw;
+    //     }
+    // }
 
 
     void SlamwareRosSdkServer::msgCbMoveToGoal_(slamware_platform_t &pltfm,

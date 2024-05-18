@@ -21,8 +21,8 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
 
-find_path(slamware_sdk_INCLUDE_DIR rpos/rpos.h $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc7/src/slamware_sdk/include)
-find_path(slamware_sdk_LIBRARY librpos_framework.a $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-x86_64-gcc7/src/slamware_sdk/lib/linux-x86_64)
+find_path(slamware_sdk_INCLUDE_DIR rpos/rpos.h $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-aarch64-gcc7/src/slamware_sdk/include)
+find_path(slamware_sdk_LIBRARY librpos_framework.a $ENV{HOME}/thirdparty/slamware_ros_sdk_linux-aarch64-gcc7/src/slamware_sdk/lib/linux-aarch64)
 if(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
   set(SLTC_SDK_INC_DIR "${slamware_sdk_INCLUDE_DIR}")
   set(SLTC_SDK_LIB_DIR "${slamware_sdk_LIBRARY}")
@@ -30,12 +30,19 @@ else(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
   if(NOT DEFINED SLTC_SDK_ROOT OR SLTC_SDK_ROOT STREQUAL "")
     set(SLTC_SDK_ROOT "$ENV{HOME}/robotics/slamtec/slamware_sdk")
   endif()
-  set(SLTC_SDK_DIR "${SLTC_SDK_ROOT}/linux-x86_64-release")
+  set(SLTC_SDK_DIR "${SLTC_SDK_ROOT}/linux-aarch64-release")
   set(SLTC_SDK_INC_DIR "${SLTC_SDK_DIR}/include")
   set(SLTC_SDK_LIB_DIR "${SLTC_SDK_DIR}/lib")
 endif(slamware_sdk_INCLUDE_DIR AND slamware_sdk_LIBRARY)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=gnu++11")
+
+set(ENV{PKG_CONFIG_PATH} "/usr/lib/aarch64-linux-gnu/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+
+find_library(CARES_LIBRARY NAMES cares)
+if(NOT CARES_LIBRARY)
+    message(FATAL_ERROR "CARES library not found")
+endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -216,6 +223,7 @@ target_link_libraries(slamware_ros_sdk_server_node
         pthread
         dl
         rt
+        ${CARES_LIBRARY}
         )
 
 
@@ -235,6 +243,7 @@ target_link_libraries(minimal_slamware_ros_sdk_server_node
         pthread
 
         )
+
 #==================================
 #catkin_package(
 #  INCLUDE_DIRS include
@@ -324,6 +333,13 @@ install(
         DIRECTORY launch rviz
         DESTINATION share/${PROJECT_NAME}
 )
+
+# add src/util/set_map.py and src/util/get_map.py to the install
+install(PROGRAMS
+        scripts/set_map.py
+        scripts/get_map.py
+        DESTINATION lib/${PROJECT_NAME}
+        )
 
 #install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_server_node
 #  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

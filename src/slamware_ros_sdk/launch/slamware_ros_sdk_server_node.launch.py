@@ -12,7 +12,7 @@ def generate_launch_description():
             default_value='192.168.11.1'
         ),
         launch.actions.DeclareLaunchArgument(
-            name='move_base_goal_topic',
+            name='goal_topic',
             default_value='/move_base_simple/goal'
         ),
         launch_ros.actions.Node(
@@ -22,58 +22,32 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 {
-                    'ip_address': launch.substitutions.LaunchConfiguration('ip_address')
-                },
-                {
-                    'angle_compensate': 'true'
-                },
-                {
-                    'fixed_odom_map_tf': 'true'
-                },
-                {
-                    'robot_frame': '/base_link'
-                },
-                {
-                    'odom_frame': '/odom'
-                },
-                {
-                    'laser_frame': '/laser'
-                },
-                {
-                    'map_frame': '/slamware_map'
-                },
-                {
-                    'robot_pose_pub_period': '0.05'
-                },
-                {
-                    'scan_pub_period': '0.1'
-                },
-                {
-                    'map_pub_period': '0.2'
-                },
-                {
-                    'path_pub_period': '0.05'
-                },
-                {
-                    '/cmd_vel': '/cmd_vel'
-                },
-                {
-                    '/move_base_simple/goal': '/move_base_simple/goal'
-                },
-                {
-                    'scan': 'scan'
-                },
-                {
-                    'odom': 'odom'
-                },
-                {
-                    'map': 'map'
-                },
-                {
-                    'map_metadata': 'map_metadata'
-                },
-                {
-                    'global_plan_path': 'global_plan_path'
+                    'ip_address': launch.substitutions.LaunchConfiguration('ip_address'),
+                    'robot_port': 1445,
+                    'reconn_wait_ms': 3000,
+
+                    'angle_compensate': True,
+                    'fixed_odom_map_tf': False,
+
+                    'robot_frame': 'base_link',
+                    'laser_frame': 'laser',
+                    'map_frame': 'map',
+                    'odom_frame': 'odom',
+                    
+                    'robot_pose_pub_period': 0.1,
+                    'scan_pub_period': 0.2,
+                    'map_update_period': 0.2,
+                    'map_pub_period': 0.2,
+                    'path_pub_period': 0.0,
+
+                    'scan_topic': 'scan',
+                    'odom_topic': 'odom/unfiltered',
+                    'map_topic': 'map',
+                    'map_info_topic': 'map_metadata',
+                    'path_topic': 'global_plan_path',
+
+                    'vel_control_topic': '/cmd_vel',
+                    'goal_topic': launch.substitutions.LaunchConfiguration('goal_topic'),
                 }
             ]
         ),
@@ -82,16 +56,16 @@ def generate_launch_description():
             executable='static_transform_publisher',
             name='map2odom',
             arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
-                       '1.0', 'slamware_map', 'odom'],
+                       '1.0', 'map', 'odom'],
         ),
 
-        launch_ros.actions.Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='base2laser',
-            arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
-                       '1.0', 'base_link', 'laser'],
-        ),
+        # launch_ros.actions.Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='base2laser',
+        #     arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
+        #                '1.0', 'base_link', 'laser'],
+        # ),
 
     ])
     return ld

@@ -53,6 +53,7 @@ namespace slamware_ros_sdk {
         ServerParams();
 
         void resetToDefault();
+        void declareParams(const rclcpp::Node::SharedPtr nhRos);
         void setBy(const rclcpp::Node::SharedPtr nhRos);
     };
     
