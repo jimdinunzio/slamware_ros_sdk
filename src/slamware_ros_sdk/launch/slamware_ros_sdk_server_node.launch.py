@@ -8,6 +8,11 @@ import launch_ros.actions
 def generate_launch_description():
     ld = launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(
+            name='gps',
+            default_value='False',
+            description='gps mode: do not publish map to odom identity static tf'
+        ),
+        launch.actions.DeclareLaunchArgument(
             name='ip_address',
             default_value='192.168.11.1'
         ),
@@ -51,7 +56,9 @@ def generate_launch_description():
                 }
             ]
         ),
+        # launch this node only if param gps:=false
         launch_ros.actions.Node(
+            condition=launch.conditions.UnlessCondition(launch.substitutions.LaunchConfiguration('gps')),
             package='tf2_ros',
             executable='static_transform_publisher',
             name='map2odom',

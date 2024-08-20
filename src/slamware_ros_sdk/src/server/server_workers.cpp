@@ -188,6 +188,23 @@ namespace slamware_ros_sdk {
         msgRobotPose.header.frame_id = srvParams.odom_frame;
         msgRobotPose.header.stamp = now;
         sltcToRosMsg(robotPose, msgRobotPose.pose.pose);
+
+        msgRobotPose.pose.covariance [0] = 0.001;
+        msgRobotPose.pose.covariance [7] = 0.001;
+        msgRobotPose.pose.covariance [35] = 0.001;
+
+        msgRobotPose.twist.twist.linear.x = 0.0;
+        msgRobotPose.twist.twist.linear.y = 0.0;
+        msgRobotPose.twist.twist.linear.z = 0.0;
+
+        msgRobotPose.twist.twist.angular.x = 0.0;
+        msgRobotPose.twist.twist.angular.y = 0.0;
+        msgRobotPose.twist.twist.angular.z = 0.0;
+
+        msgRobotPos.twist.covariance[0] = 0.0001;
+        msgRobotPose.twist.covariance[7] = 0.0001;
+        msgRobotPose.twist.covariance[35] = 0.0001;
+
         pubRobotPose_->publish(msgRobotPose);
     }
 
