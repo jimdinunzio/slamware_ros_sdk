@@ -201,7 +201,7 @@ namespace slamware_ros_sdk {
         msgRobotPose.twist.twist.angular.y = 0.0;
         msgRobotPose.twist.twist.angular.z = 0.0;
 
-        msgRobotPos.twist.covariance[0] = 0.0001;
+        msgRobotPose.twist.covariance[0] = 0.0001;
         msgRobotPose.twist.covariance[7] = 0.0001;
         msgRobotPose.twist.covariance[35] = 0.0001;
 
