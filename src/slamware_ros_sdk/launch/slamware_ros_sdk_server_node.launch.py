@@ -17,6 +17,16 @@ def generate_launch_description():
             default_value='192.168.11.1'
         ),
         launch.actions.DeclareLaunchArgument(
+            name='robot_pose_pub_period',
+            default_value='0.1',
+            description='robot pose publisher period. 0 to disable publishing pose'
+        ),
+        launch.actions.DeclareLaunchArgument(
+            name='map_pub_period',
+            default_value='0.2',
+            description='map update period. 0 to disable publishing map'
+        ),
+        launch.actions.DeclareLaunchArgument(
             name='goal_topic',
             default_value='/move_base_simple/goal'
         ),
@@ -39,10 +49,10 @@ def generate_launch_description():
                     'map_frame': 'map',
                     'odom_frame': 'odom',
                     
-                    'robot_pose_pub_period': 0.1,
+                    'robot_pose_pub_period': launch.substitutions.LaunchConfiguration('robot_pose_pub_period'),
                     'scan_pub_period': 0.2,
                     'map_update_period': 0.2,
-                    'map_pub_period': 0.2,
+                    'map_pub_period': launch.substitutions.LaunchConfiguration('map_pub_period'),
                     'path_pub_period': 0.0,
 
                     'scan_topic': 'scan',
